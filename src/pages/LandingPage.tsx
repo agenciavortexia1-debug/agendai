@@ -1,20 +1,67 @@
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Shield, ArrowRight, Star, Check, Quote } from 'lucide-react';
+import { Calendar, Clock, Shield, ArrowRight, Star, Check, Quote, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+// Logos de empresas como SVG inline para não depender de assets externos
+const CompanyLogos = () => (
+  <div className="flex items-center gap-6 mt-6 flex-wrap">
+    {[
+      { name: "TechBR", color: "#6366f1" },
+      { name: "ClinicaVida", color: "#0ea5e9" },
+      { name: "BarberPro", color: "#f59e0b" },
+    ].map((co) => (
+      <div key={co.name} className="flex items-center gap-1.5 opacity-40">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect width="18" height="18" rx="4" fill={co.color} />
+          <path d="M5 9h8M9 5v8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <span className="text-xs font-bold text-zinc-500 tracking-wider uppercase">{co.name}</span>
+      </div>
+    ))}
+  </div>
+);
+
+const testimonials = [
+  {
+    name: "Dra. Ana Silva",
+    role: "Psicóloga · ClinicaVida",
+    company: "ClinicaVida",
+    companyColor: "#0ea5e9",
+    text: "O Agendai reduziu meus faltosos em 40%. O link automático no WhatsApp é um divisor de águas. Não consigo imaginar trabalhar sem ele.",
+    avatar: "AS",
+  },
+  {
+    name: "Marco Aurélio",
+    role: "Proprietário · BarberPro",
+    company: "BarberPro",
+    companyColor: "#f59e0b",
+    text: "Meus clientes amam a facilidade. Não preciso mais atender telefone enquanto corto cabelo. O agendamento online aumentou meu faturamento.",
+    avatar: "MA",
+  },
+  {
+    name: "Juliana Costa",
+    role: "CEO · TechBR Fitness",
+    company: "TechBR",
+    companyColor: "#6366f1",
+    text: "Simples e elegante. Passa uma imagem profissional para os meus clientes corporativos e automatiza algo que antes tomava horas.",
+    avatar: "JC",
+  },
+];
+
+const proPlanFeatures = [
+  'Agendamentos ilimitados',
+  'Dashboard completo com métricas',
+  'Link personalizado exclusivo',
+  'Remoção da marca Agendai',
+  'Suporte prioritário 24/7',
+  'Integração com Google Calendar',
+];
+
+const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+
 export default function LandingPage() {
-  const testimonials = [
-    { name: "Dra. Ana Silva", role: "Psicóloga", text: "O Agendai reduziu meus faltosos em 40%. O link automático no WhatsApp é um divisor de águas." },
-    { name: "Marco Aurélio", role: "Barbeiro", text: "Meus clientes amam a facilidade. Não preciso mais atender telefone enquanto corto cabelo." },
-    { name: "Juliana Costa", role: "Personal Trainer", text: "Simples e elegante. Passa uma imagem muito mais profissional para os meus alunos." },
-  ];
-
-  const freePlanFeatures = ['Até 50 agendamentos/mês', 'Link personalizado', 'Página de reserva padrão', 'Suporte via e-mail'];
-  const proPlanFeatures = ['Agendamentos ilimitados', 'Dashboard profissional', 'Remoção da marca Agendai', 'Suporte prioritário 24/7', 'Estatísticas avançadas'];
-  const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
-
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans">
       {/* Navigation */}
@@ -26,9 +73,10 @@ export default function LandingPage() {
           <span className="text-xl font-display font-bold tracking-tight text-zinc-900">Agendai</span>
         </div>
         <div className="flex items-center gap-6 text-sm font-sans font-semibold">
+          <a href="#pricing" className="text-zinc-500 hover:text-zinc-900 transition-colors">Preço</a>
           <Link to="/auth" className="text-zinc-500 hover:text-zinc-900 transition-colors">Entrar</Link>
-          <Link to="/auth" className="bg-primary text-white px-5 py-2.5 rounded-xl hover:bg-zinc-800 transition-all shadow-lg shadow-primary/10">
-            Começar Grátis
+          <Link to="/checkout" className="bg-primary text-white px-5 py-2.5 rounded-xl hover:bg-zinc-800 transition-all shadow-lg shadow-primary/10">
+            Assinar Agora
           </Link>
         </div>
       </nav>
@@ -46,22 +94,15 @@ export default function LandingPage() {
               <span className="italic text-primary">piloto automático.</span>
             </h1>
             <p className="text-xl text-zinc-500 mb-10 max-w-md leading-relaxed font-medium">
-              Crie seu link personalizado, compartilhe com seus clientes e deixe o Agendai cuidar do resto.
+              Crie seu link personalizado, compartilhe com seus clientes e deixe o Agendai cuidar do resto. Simples, elegante e eficiente.
             </p>
             <div className="flex flex-col sm:flex-row gap-6">
-              <Link to="/auth" className="bg-primary text-white px-10 py-5 rounded-xl text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-xl shadow-primary/20">
-                Criar minha conta
+              <Link to="/checkout" className="bg-primary text-white px-10 py-5 rounded-xl text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-xl shadow-primary/20">
+                Começar por R$1,99/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <div className="flex items-center gap-4 px-2">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map(i => (
-                    <img key={i} src={`https://picsum.photos/seed/${i}/48/48`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" referrerPolicy="no-referrer" alt="usuário" />
-                  ))}
-                </div>
-                <span className="text-zinc-400 font-sans font-medium tracking-wide uppercase text-[10px]">+500 profissionais</span>
-              </div>
             </div>
+            <CompanyLogos />
           </motion.div>
 
           <motion.div
@@ -109,101 +150,105 @@ export default function LandingPage() {
               <Calendar className="w-7 h-7 text-primary" />
             </div>
             <h4 className="text-xl font-sans font-semibold text-zinc-900">Link Personalizado</h4>
-            <p className="text-zinc-500 leading-relaxed font-medium">Crie um link profissional e compartilhe em suas redes sociais.</p>
+            <p className="text-zinc-500 leading-relaxed font-medium">Crie um link profissional e compartilhe em suas redes sociais com um clique.</p>
           </div>
           <div className="space-y-6 group">
             <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
-              <Clock className="w-7 h-7 text-primary" />
+              <Zap className="w-7 h-7 text-primary" />
             </div>
-            <h4 className="text-xl font-sans font-semibold text-zinc-900">Gestão de Horários</h4>
-            <p className="text-zinc-500 leading-relaxed font-medium">Configure seus horários de atendimento e bloqueie datas específicas com facilidade.</p>
+            <h4 className="text-xl font-sans font-semibold text-zinc-900">Automação Total</h4>
+            <p className="text-zinc-500 leading-relaxed font-medium">Confirmações automáticas por e-mail. Seu cliente sempre informado, você sempre organizado.</p>
           </div>
         </div>
 
         {/* Social Proof */}
         <div className="mt-40">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Amado por profissionais</h2>
-            <p className="text-zinc-500 font-medium">Veja o que quem já usa o Agendai tem a dizer.</p>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Usado por profissionais de todo o Brasil</p>
+            <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Quem usa, recomenda</h2>
+            <p className="text-zinc-500 font-medium">Resultados reais de quem já transformou sua agenda.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((t, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
-                className="bg-white p-8 rounded-2xl border border-zinc-100 shadow-sm relative"
+                className="bg-white p-8 rounded-2xl border border-zinc-100 shadow-sm relative flex flex-col"
               >
                 <Quote className="absolute top-6 right-6 w-8 h-8 text-zinc-100" />
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-1 mb-5">
                   {[1, 2, 3, 4, 5].map(s => (
                     <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-                <p className="text-zinc-600 italic mb-6 leading-relaxed">"{t.text}"</p>
-                <div>
-                  <h5 className="font-sans font-bold text-zinc-900">{t.name}</h5>
-                  <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider">{t.role}</p>
+                <p className="text-zinc-600 italic mb-8 leading-relaxed flex-grow">"{t.text}"</p>
+                <div className="flex items-center gap-3 pt-5 border-t border-zinc-50">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                    style={{ backgroundColor: t.companyColor }}
+                  >
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <h5 className="font-sans font-bold text-zinc-900 text-sm">{t.name}</h5>
+                    <p className="text-zinc-400 text-xs font-medium">{t.role}</p>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Pricing */}
+        {/* Pricing - Somente Plano Pro */}
         <div className="mt-40 mb-20" id="pricing">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Planos que acompanham seu crescimento</h2>
-            <p className="text-zinc-500 font-medium">Comece grátis e evolua para o Pro quando precisar de mais poder.</p>
+            <p className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Simples e transparente</p>
+            <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Um plano. Tudo incluso.</h2>
+            <p className="text-zinc-500 font-medium">Sem surpresas. Sem taxas escondidas. Cancele quando quiser.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Free Plan */}
-            <div className="bg-white p-10 rounded-3xl border border-zinc-100 shadow-sm flex flex-col">
-              <div className="mb-8">
-                <span className="text-zinc-400 font-sans font-bold uppercase tracking-widest text-[10px] bg-zinc-50 px-3 py-1 rounded-full border border-zinc-100">Básico</span>
-                <h3 className="text-3xl font-display font-bold mt-4">Grátis</h3>
-                <p className="text-zinc-400 mt-2 text-sm">Para quem está começando agora.</p>
-              </div>
-              <ul className="space-y-4 mb-10 flex-grow">
-                {freePlanFeatures.map(item => (
-                  <li key={item} className="flex items-center gap-3 text-zinc-600 font-medium text-sm">
-                    <Check className="w-5 h-5 text-emerald-500" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/auth" className="w-full py-4 rounded-xl border-2 border-zinc-100 text-zinc-900 font-sans font-bold hover:bg-zinc-50 transition-all text-center">
-                Começar agora
-              </Link>
-            </div>
+          <div className="max-w-md mx-auto">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="bg-zinc-900 p-12 rounded-3xl shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl"></div>
 
-            {/* Pro Plan */}
-            <div className="bg-zinc-900 p-10 rounded-3xl shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors"></div>
-              <div className="mb-8 relative z-10">
-                <span className="text-primary font-sans font-bold uppercase tracking-widest text-[10px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20">Mais Popular</span>
-                <div className="flex items-baseline gap-2 mt-4">
-                  <h3 className="text-3xl font-display font-bold text-white">R$ 1,99</h3>
-                  <span className="text-zinc-500 text-sm">/mês</span>
+              <div className="relative z-10">
+                <span className="text-primary font-sans font-bold uppercase tracking-widest text-[10px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                  Plano Pro
+                </span>
+                <div className="flex items-baseline gap-2 mt-6 mb-2">
+                  <h3 className="text-5xl font-display font-bold text-white">R$ 1,99</h3>
+                  <span className="text-zinc-500 text-lg">/mês</span>
                 </div>
-                <p className="text-zinc-400 mt-2 text-sm">Tudo o que você precisa para escalar.</p>
+                <p className="text-zinc-400 text-sm mb-10">Tudo o que você precisa para escalar seu negócio.</p>
+
+                <ul className="space-y-4 mb-10">
+                  {proPlanFeatures.map(item => (
+                    <li key={item} className="flex items-center gap-3 text-zinc-300 font-medium text-sm">
+                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-primary" />
+                      </div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link
+                  to="/checkout"
+                  className="w-full py-5 rounded-2xl bg-primary text-white font-sans font-bold text-lg hover:bg-white hover:text-zinc-900 transition-all text-center block shadow-lg shadow-primary/30"
+                >
+                  Assinar Agora →
+                </Link>
+                <p className="text-center text-zinc-500 text-xs mt-4">✓ 7 dias grátis · Cancele a qualquer momento</p>
               </div>
-              <ul className="space-y-4 mb-10 flex-grow relative z-10">
-                {proPlanFeatures.map(item => (
-                  <li key={item} className="flex items-center gap-3 text-zinc-300 font-medium text-sm">
-                    <Check className="w-5 h-5 text-primary" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/auth" className="w-full py-4 rounded-xl bg-primary text-white font-sans font-bold hover:bg-white hover:text-zinc-900 transition-all text-center relative z-10 shadow-lg shadow-primary/20">
-                Assinar Plano Pro
-              </Link>
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>
 
-      <footer className="border-t border-zinc-100 py-16 px-6 text-center text-sm text-zinc-400 font-sans font-medium uppercase tracking-widest text-[10px]">
+      <footer className="border-t border-zinc-100 py-16 px-6 text-center text-sm text-zinc-400 font-sans font-medium">
         <p>© 2026 Agendai. Todos os direitos reservados.</p>
       </footer>
     </div>

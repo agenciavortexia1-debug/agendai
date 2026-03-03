@@ -13,6 +13,7 @@ import BusinessHours from './pages/BusinessHours';
 import Personalization from './pages/Personalization';
 import Services from './pages/Services';
 import ClientPortal from './pages/ClientPortal';
+import CheckoutPage from './pages/CheckoutPage';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -65,35 +66,38 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/dashboard" />} />
-        
+
         {/* Protected Dashboard Routes */}
-        <Route 
-          path="/dashboard" 
-          element={session ? <Dashboard session={session} /> : <Navigate to="/auth" />} 
+        <Route
+          path="/dashboard"
+          element={session ? <Dashboard session={session} /> : <Navigate to="/auth" />}
         />
-        <Route 
-          path="/dashboard/settings" 
-          element={session ? <BusinessSettings session={session} /> : <Navigate to="/auth" />} 
+        <Route
+          path="/dashboard/settings"
+          element={session ? <BusinessSettings session={session} /> : <Navigate to="/auth" />}
         />
-        <Route 
-          path="/dashboard/hours" 
-          element={session ? <BusinessHours session={session} /> : <Navigate to="/auth" />} 
+        <Route
+          path="/dashboard/hours"
+          element={session ? <BusinessHours session={session} /> : <Navigate to="/auth" />}
         />
-        <Route 
-          path="/dashboard/personalization" 
-          element={session ? <Personalization session={session} /> : <Navigate to="/auth" />} 
+        <Route
+          path="/dashboard/personalization"
+          element={session ? <Personalization session={session} /> : <Navigate to="/auth" />}
         />
-        <Route 
-          path="/dashboard/services" 
-          element={session ? <Services session={session} /> : <Navigate to="/auth" />} 
+        <Route
+          path="/dashboard/services"
+          element={session ? <Services session={session} /> : <Navigate to="/auth" />}
         />
 
         {/* Public Booking Route */}
         <Route path="/b/:slug" element={<PublicBooking />} />
-        
+
+        {/* Checkout Route - redireciona ao Stripe */}
+        <Route path="/checkout" element={<CheckoutPage />} />
+
         {/* Client Portal Route */}
         <Route path="/meus-agendamentos" element={<ClientPortal />} />
-        
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
