@@ -5,6 +5,16 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function LandingPage() {
+  const testimonials = [
+    { name: "Dra. Ana Silva", role: "Psicóloga", text: "O Agendai reduziu meus faltosos em 40%. O link automático no WhatsApp é um divisor de águas." },
+    { name: "Marco Aurélio", role: "Barbeiro", text: "Meus clientes amam a facilidade. Não preciso mais atender telefone enquanto corto cabelo." },
+    { name: "Juliana Costa", role: "Personal Trainer", text: "Simples e elegante. Passa uma imagem muito mais profissional para os meus alunos." },
+  ];
+
+  const freePlanFeatures = ['Até 50 agendamentos/mês', 'Link personalizado', 'Página de reserva padrão', 'Suporte via e-mail'];
+  const proPlanFeatures = ['Agendamentos ilimitados', 'Dashboard profissional', 'Remoção da marca Agendai', 'Suporte prioritário 24/7', 'Estatísticas avançadas'];
+  const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans">
       {/* Navigation */}
@@ -23,8 +33,8 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <main className="max-w-6xl mx-auto px-6 pt-20 pb-32">
+        {/* Hero Section */}
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -36,7 +46,7 @@ export default function LandingPage() {
               <span className="italic text-primary">piloto automático.</span>
             </h1>
             <p className="text-xl text-zinc-500 mb-10 max-w-md leading-relaxed font-medium">
-              Crie seu link personalizado, compartilhe com seus clientes e deixe o Agendai cuidar do resto. Simples, elegante e eficiente.
+              Crie seu link personalizado, compartilhe com seus clientes e deixe o Agendai cuidar do resto.
             </p>
             <div className="flex flex-col sm:flex-row gap-6">
               <Link to="/auth" className="bg-primary text-white px-10 py-5 rounded-xl text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-xl shadow-primary/20">
@@ -46,10 +56,10 @@ export default function LandingPage() {
               <div className="flex items-center gap-4 px-2">
                 <div className="flex -space-x-3">
                   {[1, 2, 3].map(i => (
-                    <img key={i} src={`https://picsum.photos/seed/${i}/48/48`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" referrerPolicy="no-referrer" />
+                    <img key={i} src={`https://picsum.photos/seed/${i}/48/48`} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" referrerPolicy="no-referrer" alt="usuário" />
                   ))}
                 </div>
-                <span className="text-sm text-zinc-400 font-sans font-medium tracking-wide uppercase text-[10px]">+500 profissionais</span>
+                <span className="text-zinc-400 font-sans font-medium tracking-wide uppercase text-[10px]">+500 profissionais</span>
               </div>
             </div>
           </motion.div>
@@ -73,41 +83,63 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'].map((time, i) => (
+                {timeSlots.map((time, i) => (
                   <div key={time} className={i === 0 ? "bg-primary text-white p-5 rounded-xl text-center shadow-lg shadow-primary/20 font-sans font-semibold" : "bg-zinc-50 p-5 rounded-xl text-center hover:bg-zinc-100 transition-colors cursor-pointer text-zinc-600 font-sans font-semibold border border-zinc-100"}>
                     {time}
                   </div>
                 ))}
               </div>
             </div>
-            {/* Decorative elements */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
           </motion.div>
         </div>
 
-        {/* Social Proof / Testimonials */}
+        {/* Features */}
+        <div className="grid md:grid-cols-3 gap-16 mt-40">
+          <div className="space-y-6 group">
+            <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
+              <Shield className="w-7 h-7 text-primary" />
+            </div>
+            <h4 className="text-xl font-sans font-semibold text-zinc-900">Segurança Total</h4>
+            <p className="text-zinc-500 leading-relaxed font-medium">Seus dados e de seus clientes protegidos com criptografia de ponta a ponta.</p>
+          </div>
+          <div className="space-y-6 group">
+            <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
+              <Calendar className="w-7 h-7 text-primary" />
+            </div>
+            <h4 className="text-xl font-sans font-semibold text-zinc-900">Link Personalizado</h4>
+            <p className="text-zinc-500 leading-relaxed font-medium">Crie um link profissional e compartilhe em suas redes sociais.</p>
+          </div>
+          <div className="space-y-6 group">
+            <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
+              <Clock className="w-7 h-7 text-primary" />
+            </div>
+            <h4 className="text-xl font-sans font-semibold text-zinc-900">Gestão de Horários</h4>
+            <p className="text-zinc-500 leading-relaxed font-medium">Configure seus horários de atendimento e bloqueie datas específicas com facilidade.</p>
+          </div>
+        </div>
+
+        {/* Social Proof */}
         <div className="mt-40">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Amado por profissionais</h2>
             <p className="text-zinc-500 font-medium">Veja o que quem já usa o Agendai tem a dizer.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { name: "Dra. Ana Silva", role: "Psicóloga", text: "O Agendai reduziu meus faltosos em 40%. O link automático no WhatsApp é um divisor de águas." },
-              { name: "Marco Aurélio", role: "Barbeiro", text: "Meus clientes amam a facilidade. Não preciso mais atender telefone enquanto corto cabelo." },
-              { name: "Juliana Costa", role: "Personal Trainer", text: "Simples e elegante. Passa uma imagem muito mais profissional para os meus alunos." }
-            ].map((t, i) => (
+            {testimonials.map((t, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
                 className="bg-white p-8 rounded-2xl border border-zinc-100 shadow-sm relative"
               >
-                <Quote className="absolute top-6 right-6 w-8 h-8 text-zinc-50" />
+                <Quote className="absolute top-6 right-6 w-8 h-8 text-zinc-100" />
                 <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  ))}
                 </div>
-                <p className="text-zinc-600 italic mb-6 relative z-10 leading-relaxed">"{t.text}"</p>
+                <p className="text-zinc-600 italic mb-6 leading-relaxed">"{t.text}"</p>
                 <div>
                   <h5 className="font-sans font-bold text-zinc-900">{t.name}</h5>
                   <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider">{t.role}</p>
@@ -117,13 +149,12 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Pricing Section */}
+        {/* Pricing */}
         <div className="mt-40 mb-20" id="pricing">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Planos que acompanham seu crescimento</h2>
             <p className="text-zinc-500 font-medium">Comece grátis e evolua para o Pro quando precisar de mais poder.</p>
           </div>
-
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
             <div className="bg-white p-10 rounded-3xl border border-zinc-100 shadow-sm flex flex-col">
@@ -133,7 +164,7 @@ export default function LandingPage() {
                 <p className="text-zinc-400 mt-2 text-sm">Para quem está começando agora.</p>
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
-                {['Até 50 agendamentos/mês', 'Link personalizado', 'Página de reserva padrão', 'Suporte via e-mail'].map(item => (
+                {freePlanFeatures.map(item => (
                   <li key={item} className="flex items-center gap-3 text-zinc-600 font-medium text-sm">
                     <Check className="w-5 h-5 text-emerald-500" />
                     {item}
@@ -157,7 +188,7 @@ export default function LandingPage() {
                 <p className="text-zinc-400 mt-2 text-sm">Tudo o que você precisa para escalar.</p>
               </div>
               <ul className="space-y-4 mb-10 flex-grow relative z-10">
-                {['Agendamentos ilimitados', 'Dashboard profissional', 'Remoção da marca Agendai', 'Suporte prioritário 24/7', 'Estatísticas avançadas'].map(item => (
+                {proPlanFeatures.map(item => (
                   <li key={item} className="flex items-center gap-3 text-zinc-300 font-medium text-sm">
                     <Check className="w-5 h-5 text-primary" />
                     {item}
@@ -170,12 +201,11 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-    </div>
-      </main >
+      </main>
 
-    <footer className="border-t border-zinc-100 py-16 px-6 text-center text-sm text-zinc-400 font-sans font-medium uppercase tracking-widest text-[10px]">
-      <p>© 2026 Agendai. Todos os direitos reservados.</p>
-    </footer>
-    </div >
+      <footer className="border-t border-zinc-100 py-16 px-6 text-center text-sm text-zinc-400 font-sans font-medium uppercase tracking-widest text-[10px]">
+        <p>© 2026 Agendai. Todos os direitos reservados.</p>
+      </footer>
+    </div>
   );
 }
