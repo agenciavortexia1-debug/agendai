@@ -122,8 +122,16 @@ export default function Dashboard({ session }: { session: Session }) {
     );
   }
 
-  const isSubscriptionActive = ['active', 'trialing'].includes(business.subscription_status || 'trialing');
+  // Somente assinaturas PAGAS e ativas têm acesso ao sistema
+  const isSubscriptionActive = business.subscription_status === 'active';
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  // Se não tem assinatura ativa, redireciona para o checkout automaticamente
+  useEffect(() => {
+    if (!loading && business && !isSubscriptionActive) {
+      navigate('/checkout');
+    }
+  }, [loading, business, isSubscriptionActive, navigate]);
 
   const handleCheckout = async () => {
     setCheckoutLoading(true);
