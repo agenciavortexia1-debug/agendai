@@ -11,25 +11,22 @@ export default function CheckoutPage() {
     useEffect(() => {
         const startCheckout = async () => {
             try {
-                // Verificar se já tem sessão ativa
+                // Verificar se ja tem sessao ativa
                 const { data: { session } } = await supabase.auth.getSession();
-
-                if (!session) {
-                    // Se não estiver logado, salvar intenção e redirecionar para login
-                    sessionStorage.setItem('redirect_after_login', '/checkout');
-                    navigate('/auth');
-                    return;
-                }
 
                 setStatus('redirecting');
 
-                // Chamar a API de checkout do Stripe
+                // Chamar a API - com token se logado, sem token se usuario novo
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                };
+                if (session?.access_token) {
+                    headers['token'] = session.access_token;
+                }
+
                 const response = await fetch('/api/create-checkout-session', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'token': session.access_token,
-                    },
+                    headers,
                 });
 
                 const data = await response.json();
@@ -38,7 +35,7 @@ export default function CheckoutPage() {
                 if (data?.url) {
                     window.location.href = data.url;
                 } else {
-                    throw new Error('Link de pagamento não recebido.');
+                    throw new Error('Link de pagamento nao recebido.');
                 }
             } catch (err: any) {
                 setStatus('error');
