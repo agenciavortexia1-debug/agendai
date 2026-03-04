@@ -8,7 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Palette,
-  Briefcase
+  Briefcase,
+  BarChart3
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
@@ -25,6 +26,7 @@ export default function Sidebar() {
 
   const navItems = [
     { path: '/dashboard', icon: CalendarIcon, label: 'Agenda' },
+    { path: '/dashboard/analytics', icon: BarChart3, label: 'Análises' },
     { path: '/dashboard/hours', icon: Clock, label: 'Horários' },
     { path: '/dashboard/services', icon: Briefcase, label: 'Serviços' },
     { path: '/dashboard/personalization', icon: Palette, label: 'Personalização' },
@@ -95,7 +97,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-100 px-4 py-3 flex justify-around items-center z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-100 px-2 py-3 flex justify-around items-center z-50">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -103,21 +105,19 @@ export default function Sidebar() {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex-1 flex flex-col items-center gap-1 transition-all",
+                "flex-1 flex flex-col items-center justify-center transition-all",
                 isActive ? "text-primary" : "text-zinc-300"
               )}
             >
               <item.icon className="w-6 h-6" />
-              <span className="text-[9px] font-sans font-semibold uppercase tracking-tighter text-center">{item.label}</span>
             </Link>
           );
         })}
         <button
           onClick={handleLogout}
-          className="flex-1 flex flex-col items-center gap-1 text-red-300"
+          className="flex-1 flex flex-col items-center justify-center text-red-300"
         >
           <LogOut className="w-6 h-6" />
-          <span className="text-[9px] font-sans font-semibold uppercase tracking-tighter text-center">Sair</span>
         </button>
       </nav>
     </>

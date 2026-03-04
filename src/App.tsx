@@ -15,6 +15,7 @@ import Services from './pages/Services';
 import ClientPortal from './pages/ClientPortal';
 import CheckoutPage from './pages/CheckoutPage';
 import ResetPassword from './pages/ResetPassword';
+import Analytics from './pages/Analytics';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -77,6 +78,10 @@ export default function App() {
         <Route
           path="/dashboard"
           element={session ? <Dashboard session={session} /> : <Navigate to="/auth" />}
+        />
+        <Route
+          path="/dashboard/analytics"
+          element={session ? <Analytics session={session} /> : <Navigate to="/auth" />}
         />
         <Route
           path="/dashboard/settings"

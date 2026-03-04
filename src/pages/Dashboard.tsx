@@ -290,20 +290,7 @@ export default function Dashboard({ session }: { session: Session }) {
         <div className={cn("grid grid-cols-1 lg:grid-cols-3 gap-8", isSubscriptionProblematic && "opacity-50 pointer-events-none")}>
           {/* Stats & List */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <button
-                onClick={() => setShowAllAppointments(true)}
-                className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm text-left hover:bg-zinc-50 transition-all group"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Users className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-300 group-hover:text-zinc-900 transition-colors" />
-                </div>
-                <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest">Total de Agendamentos</p>
-                <h3 className="text-2xl font-display font-bold text-zinc-900 mt-1">{appointments.length}</h3>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
               <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
@@ -346,69 +333,6 @@ export default function Dashboard({ session }: { session: Session }) {
               </div>
             </div>
 
-            {/* KPIs & Performance Section */}
-            <div className="bg-white p-8 rounded-2xl border border-zinc-200 shadow-sm overflow-hidden relative group">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-indigo-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-sans font-semibold text-zinc-900">Desempenho Operacional</h3>
-                    <p className="text-sm text-zinc-400">Visão geral do seu negócio</p>
-                  </div>
-                </div>
-                <Activity className="w-6 h-6 text-zinc-100 group-hover:text-indigo-100 transition-colors" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Total Ativos</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-display font-bold text-zinc-900">{activeApps.length}</span>
-                    <span className="text-xs font-semibold text-emerald-500 flex items-center gap-0.5">
-                      <TrendingUp className="w-3 h-3" /> 12%
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-1 border-y md:border-y-0 md:border-x border-zinc-100 py-4 md:py-0 md:px-8">
-                  <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Dia de Pico</p>
-                  <span className="text-xl font-sans font-semibold text-zinc-900 capitalize">{peakDay}</span>
-                </div>
-                <div className="space-y-1 md:pl-4">
-                  <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Horário de Pico</p>
-                  <span className="text-xl font-sans font-semibold text-zinc-900">{peakHour}</span>
-                </div>
-              </div>
-
-              {/* Peak Hours Chart (SVG) */}
-              <div className="relative pt-10 border-t border-zinc-50">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xs font-sans font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
-                    <BarChart3 className="w-3 h-3 text-indigo-400" />
-                    Fluxo de Horários (Hoje)
-                  </h4>
-                </div>
-                <div className="h-24 w-full flex items-end gap-2 px-2">
-                  {chartData.map((val, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-indigo-50 rounded-t-lg relative group/bar hover:bg-indigo-100 transition-colors"
-                      style={{ height: `${(val / maxVal) * 100}%` }}
-                    >
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-                        {val} agend. às {i + 8}:00
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-between mt-2 text-[10px] font-sans font-medium text-zinc-300 px-1">
-                  <span>08:00</span>
-                  <span>14:00</span>
-                  <span>20:00</span>
-                </div>
-              </div>
-            </div>
 
             {/* Appointment List */}
             <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">

@@ -51,7 +51,7 @@ export default function BusinessHours({ session }: { session: Session }) {
             weekday: i,
             open_time: '09:00',
             close_time: '18:00',
-            is_closed: i === 0 || i === 6 // Closed on weekends by default
+            is_closed: true // All days closed by default to force manual setup
           })) as BusinessHour[];
           setHours(defaultHours);
         }
