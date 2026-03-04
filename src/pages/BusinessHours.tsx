@@ -3,10 +3,10 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { BusinessHour, Business } from '../types';
 import { motion } from 'motion/react';
-import { 
-  ArrowLeft, 
-  Save, 
-  Loader2, 
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
   Clock,
   CheckCircle2,
   XCircle
@@ -33,7 +33,7 @@ export default function BusinessHours({ session }: { session: Session }) {
         .select('*')
         .eq('user_id', session.user.id)
         .single();
-      
+
       if (businessData) {
         setBusiness(businessData);
         const { data: hoursData } = await supabase
@@ -41,7 +41,7 @@ export default function BusinessHours({ session }: { session: Session }) {
           .select('*')
           .eq('business_id', businessData.id)
           .order('weekday', { ascending: true });
-        
+
         if (hoursData && hoursData.length > 0) {
           setHours(hoursData);
         } else {
@@ -70,7 +70,7 @@ export default function BusinessHours({ session }: { session: Session }) {
           hours.map(({ id, ...rest }) => rest),
           { onConflict: 'business_id,weekday' }
         );
-      
+
       if (error) throw error;
       navigate('/dashboard');
     } catch (err) {
@@ -105,7 +105,7 @@ export default function BusinessHours({ session }: { session: Session }) {
             Voltar para Dashboard
           </Link>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-zinc-200"
@@ -123,11 +123,11 @@ export default function BusinessHours({ session }: { session: Session }) {
             <div className="space-y-2 mb-6">
               {hours.map((hour, index) => (
                 <div key={index} className={cn(
-                  "flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 rounded-xl border transition-all gap-3 sm:gap-0",
+                  "flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all gap-2 sm:gap-0",
                   hour.is_closed ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-200 shadow-sm"
                 )}>
                   <div className="flex items-center gap-3 w-full sm:w-32">
-                    <button 
+                    <button
                       onClick={() => updateHour(index, 'is_closed', !hour.is_closed)}
                       className={cn(
                         "w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0",
@@ -150,8 +150,8 @@ export default function BusinessHours({ session }: { session: Session }) {
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                       <span className="text-[9px] font-sans font-medium text-zinc-300 uppercase w-8 sm:w-auto">Abre</span>
-                      <input 
-                        type="time" 
+                      <input
+                        type="time"
                         disabled={hour.is_closed}
                         value={hour.open_time}
                         onChange={(e) => updateHour(index, 'open_time', e.target.value)}
@@ -160,8 +160,8 @@ export default function BusinessHours({ session }: { session: Session }) {
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                       <span className="text-[9px] font-sans font-medium text-zinc-300 uppercase w-8 sm:w-auto">Fecha</span>
-                      <input 
-                        type="time" 
+                      <input
+                        type="time"
                         disabled={hour.is_closed}
                         value={hour.close_time}
                         onChange={(e) => updateHour(index, 'close_time', e.target.value)}
@@ -182,7 +182,7 @@ export default function BusinessHours({ session }: { session: Session }) {
               ))}
             </div>
 
-            <button 
+            <button
               onClick={handleSave}
               disabled={saving}
               className="w-full bg-primary text-white py-4 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70"

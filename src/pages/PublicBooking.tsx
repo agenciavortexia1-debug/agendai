@@ -4,24 +4,24 @@ import { supabase } from '../lib/supabase';
 import { Business, BusinessHour, Appointment, BlockedTime, AvailableSlot } from '../types';
 import { generateAvailableSlots } from '../lib/scheduling';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Calendar as CalendarIcon, 
-  Clock, 
-  User, 
-  Phone, 
-  Mail, 
-  ChevronLeft, 
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  User,
+  Phone,
+  Mail,
+  ChevronLeft,
   ChevronRight,
   CheckCircle2,
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { 
-  format, 
-  addDays, 
-  startOfToday, 
-  isSameDay, 
-  startOfDay, 
+import {
+  format,
+  addDays,
+  startOfToday,
+  isSameDay,
+  startOfDay,
   parseISO,
   isBefore,
   endOfDay
@@ -36,17 +36,18 @@ export default function PublicBooking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
-  
+
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
-  
+
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
   const [step, setStep] = useState<'auth' | 'date' | 'form' | 'success'>('auth');
   const [userAppointments, setUserAppointments] = useState<Appointment[]>([]);
   const [loadingUserAppointments, setLoadingUserAppointments] = useState(false);
   const [reschedulingAppointment, setReschedulingAppointment] = useState<Appointment | null>(null);
-  
+  const [hasConfirmedAuth, setHasConfirmedAuth] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -68,9 +69,6 @@ export default function PublicBooking() {
           phone: session.user.user_metadata?.phone || prev.phone,
           service: ''
         }));
-        setStep('date');
-      } else {
-        setStep('auth');
       }
     });
 
@@ -84,9 +82,6 @@ export default function PublicBooking() {
           phone: session.user.user_metadata?.phone || prev.phone,
           service: ''
         }));
-        setStep('date');
-      } else {
-        setStep('auth');
       }
     });
 
@@ -98,7 +93,7 @@ export default function PublicBooking() {
     async function loadUserAppointments() {
       if (!business || !session?.user) return;
       setLoadingUserAppointments(true);
-      
+
       const { data, error } = await supabase
         .from('appointments')
         .select('*')
@@ -107,7 +102,7 @@ export default function PublicBooking() {
         .neq('status', 'cancelled')
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true });
-      
+
       if (!error && data) {
         setUserAppointments(data);
       }
@@ -123,13 +118,13 @@ export default function PublicBooking() {
   useEffect(() => {
     async function loadBusiness() {
       if (!slug) return;
-      
+
       const { data, error } = await supabase
         .from('businesses')
         .select('*')
         .eq('slug', slug)
         .single();
-      
+
       if (error || !data) {
         if (error?.message === 'Failed to fetch') {
           setError('Erro de conexão com o Supabase. Verifique se as credenciais estão corretas.');
@@ -149,10 +144,10 @@ export default function PublicBooking() {
     async function loadSlots() {
       if (!business || !selectedDate) return;
       setLoadingSlots(true);
-      
+
       try {
         const weekday = selectedDate.getDay();
-        
+
         // 1. Get business hours for this day from the business_hours table
         const { data: hours } = await supabase
           .from('business_hours')
@@ -160,7 +155,7 @@ export default function PublicBooking() {
           .eq('business_id', business.id)
           .eq('weekday', weekday)
           .single();
-        
+
         if (!hours || hours.is_closed) {
           setAvailableSlots([]);
           return;
@@ -169,7 +164,7 @@ export default function PublicBooking() {
         // 2. Get appointments for this day to lock slots
         const dayStart = startOfDay(selectedDate).toISOString();
         const dayEnd = endOfDay(selectedDate).toISOString();
-        
+
         const { data: appointmentsData } = await supabase
           .from('appointments')
           .select('*')
@@ -195,7 +190,7 @@ export default function PublicBooking() {
           blocked || [],
           selectedDate
         );
-        
+
         setAvailableSlots(slots);
       } catch (err) {
         console.error('Error loading slots:', err);
@@ -214,20 +209,29 @@ export default function PublicBooking() {
 
   const handleAuthSuccess = (userId: string, name: string, email: string) => {
     setFormData(prev => ({ ...prev, name, email }));
+    setHasConfirmedAuth(true);
     setStep('date');
+  };
+
+  const handleSignOut = () => {
+    // Logout local apenas para nao derrubar a sessao do dono em outras abas
+    setHasConfirmedAuth(false);
+    setStep('auth');
+    setSession(null);
+    setUserAppointments([]);
   };
 
   const handleCancelAppointment = async (id: string) => {
     if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
-    
+
     const { error } = await supabase
       .from('appointments')
-      .update({ 
+      .update({
         status: 'cancelled',
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
-    
+
     if (error) {
       alert('Erro ao cancelar agendamento: ' + error.message);
     } else {
@@ -246,7 +250,7 @@ export default function PublicBooking() {
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot || !business) return;
-    
+
     // Get fresh session to ensure we have the user ID
     const { data: { session: currentSession } } = await supabase.auth.getSession();
     if (!currentSession?.user) {
@@ -300,7 +304,7 @@ export default function PublicBooking() {
         if (error) throw error;
         appointmentId = data.id;
       }
-      
+
       // Refresh user appointments list immediately
       const { data: updatedApps } = await supabase
         .from('appointments')
@@ -310,7 +314,7 @@ export default function PublicBooking() {
         .neq('status', 'cancelled')
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true });
-      
+
       if (updatedApps) setUserAppointments(updatedApps);
 
       setStep('success');
@@ -342,9 +346,9 @@ export default function PublicBooking() {
   }
 
   return (
-    <div 
-      className={cn("min-h-screen py-8 md:py-12 px-4 md:px-6 transition-all duration-300", business.font_family || 'font-sans')} 
-      style={{ 
+    <div
+      className={cn("min-h-screen py-8 md:py-12 px-4 md:px-6 transition-all duration-300", business.font_family || 'font-sans')}
+      style={{
         '--primary-color': business.primary_color || '#18181b',
         '--bg-color': business.bg_color || '#fcfcfc',
         '--text-color': business.text_color || '#18181b',
@@ -357,9 +361,9 @@ export default function PublicBooking() {
         <header className="text-center mb-10 md:mb-16 relative">
           {session && (
             <div className="absolute -top-4 right-0 flex items-center gap-2 text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">
-              <span className="text-zinc-900">{formData.name}</span>
-              <button 
-                onClick={() => supabase.auth.signOut()}
+              <span className="text-zinc-900">{formData.name || session.user.email}</span>
+              <button
+                onClick={handleSignOut}
                 className="underline hover:text-zinc-900 transition-colors"
               >
                 Sair
@@ -380,16 +384,17 @@ export default function PublicBooking() {
         </header>
 
         <AnimatePresence mode="wait">
-          {step === 'auth' && (
-            <ClientBookingAuth 
+          {(step === 'auth' || !hasConfirmedAuth) && (
+            <ClientBookingAuth
               onSuccess={handleAuthSuccess}
               onBack={() => window.history.back()}
               initialEmail={formData.email}
               initialName={formData.name}
+              session={session}
             />
           )}
 
-          {step === 'date' && (
+          {step === 'date' && hasConfirmedAuth && (
             <div className="space-y-12">
               {/* User Appointments Section */}
               <motion.div
@@ -450,7 +455,7 @@ export default function PublicBooking() {
                   <p className="text-sm font-medium">
                     Remarcando agendamento de {format(parseISO(reschedulingAppointment.start_time), "d/MM 'às' HH:mm")}
                   </p>
-                  <button 
+                  <button
                     onClick={() => setReschedulingAppointment(null)}
                     className="text-xs font-sans font-semibold underline"
                   >
@@ -459,7 +464,7 @@ export default function PublicBooking() {
                 </div>
               )}
 
-              <motion.div 
+              <motion.div
                 key="date"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -471,13 +476,13 @@ export default function PublicBooking() {
                   <div className="flex items-center justify-between mb-6 md:mb-8">
                     <h2 className="text-lg md:text-xl font-sans font-semibold text-zinc-900">Selecione o Dia</h2>
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={() => setSelectedDate(addDays(selectedDate, -7))}
                         className="p-2 hover:bg-zinc-50 rounded-full transition-colors"
                       >
                         <ChevronLeft className="w-5 h-5 text-zinc-400" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => setSelectedDate(addDays(selectedDate, 7))}
                         className="p-2 hover:bg-zinc-50 rounded-full transition-colors"
                       >
@@ -495,7 +500,7 @@ export default function PublicBooking() {
                       const date = addDays(startOfToday(), i);
                       const isSelected = isSameDay(date, selectedDate);
                       const isPast = isBefore(date, startOfToday());
-                      
+
                       return (
                         <button
                           key={i}
@@ -520,7 +525,7 @@ export default function PublicBooking() {
                 {/* Slots Section */}
                 <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-zinc-100">
                   <h2 className="text-lg md:text-xl font-sans font-semibold mb-6 md:mb-8 text-zinc-900">Horários Disponíveis</h2>
-                  
+
                   {loadingSlots ? (
                     <div className="flex flex-col items-center justify-center h-48 md:h-64 text-zinc-200">
                       <Loader2 className="w-8 h-8 animate-spin mb-4" />
@@ -553,7 +558,7 @@ export default function PublicBooking() {
           )}
 
           {step === 'form' && selectedSlot && (
-            <motion.div 
+            <motion.div
               key="form"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -561,7 +566,7 @@ export default function PublicBooking() {
               className="max-w-xl mx-auto"
             >
               <div className="bg-white rounded-2xl p-6 md:p-10 shadow-xl border border-zinc-100">
-                <button 
+                <button
                   onClick={() => setStep('date')}
                   className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6 md:mb-8 text-sm font-medium"
                 >
@@ -587,7 +592,7 @@ export default function PublicBooking() {
                   {business.services && business.services.length > 0 && (
                     <div className="space-y-2">
                       <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Serviço</label>
-                      <select 
+                      <select
                         required
                         value={formData.service}
                         onChange={(e) => setFormData({ ...formData, service: e.target.value })}
@@ -605,8 +610,8 @@ export default function PublicBooking() {
                     <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Seu Nome</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -620,8 +625,8 @@ export default function PublicBooking() {
                     <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Telefone</label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                      <input 
-                        type="tel" 
+                      <input
+                        type="tel"
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -633,7 +638,7 @@ export default function PublicBooking() {
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Observações (opcional)</label>
-                    <textarea 
+                    <textarea
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 px-4 focus:ring-2 focus:ring-primary transition-all min-h-[100px] text-zinc-900"
@@ -641,8 +646,8 @@ export default function PublicBooking() {
                     />
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={booking}
                     className="w-full bg-primary text-white py-5 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
                   >
@@ -656,7 +661,7 @@ export default function PublicBooking() {
           )}
 
           {step === 'success' && (
-            <motion.div 
+            <motion.div
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -670,7 +675,7 @@ export default function PublicBooking() {
                   {reschedulingAppointment ? 'Horário Alterado!' : 'Tudo pronto!'}
                 </h2>
                 <p className="text-zinc-500 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
-                  {reschedulingAppointment 
+                  {reschedulingAppointment
                     ? `Seu agendamento em ${business.name} foi alterado com sucesso.`
                     : `Seu agendamento para ${business.name} foi confirmado com sucesso.`
                   }
@@ -680,7 +685,7 @@ export default function PublicBooking() {
                   <p className="font-semibold text-sm md:text-base text-zinc-900">{format(selectedSlot!.start, "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
                   <p className="text-xl md:text-2xl font-display font-bold text-primary">{format(selectedSlot!.start, "HH:mm")}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => window.location.reload()}
                   className="text-primary font-sans font-semibold hover:underline text-sm md:text-base"
                 >

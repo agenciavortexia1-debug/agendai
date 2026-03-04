@@ -1,8 +1,10 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Shield, ArrowRight, Star, Check, Quote, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '../lib/utils';
 
 // Logos de empresas como SVG inline para não depender de assets externos
 const CompanyLogos = () => (
@@ -25,56 +27,59 @@ const CompanyLogos = () => (
 
 const testimonials = [
   {
-    name: "Dra. Ana Silva",
-    role: "Psicóloga · ClinicaVida",
-    company: "ClinicaVida",
+    name: "Dra. Paula Menezes",
+    role: "Dermatologista · Clínica Skin",
+    company: "Clínica Skin",
     companyColor: "#0ea5e9",
-    text: "O Agendai reduziu meus faltosos em 40%. O link automático no WhatsApp é um divisor de águas. Não consigo imaginar trabalhar sem ele.",
-    avatar: "AS",
+    text: "O Agendai transformou a gestão da minha clínica. O link de agendamento automático no WhatsApp reduziu faltas e me deu mais tempo para focar nos pacientes. É uma ferramenta indispensável para profissionais liberais.",
+    avatar: "PM",
   },
   {
-    name: "Marco Aurélio",
-    role: "Proprietário · BarberPro",
+    name: "Ricardo Oliveira",
+    role: "Barbeiro Chefe · BarberPro",
     company: "BarberPro",
     companyColor: "#f59e0b",
-    text: "Meus clientes amam a facilidade. Não preciso mais atender telefone enquanto corto cabelo. O agendamento online aumentou meu faturamento.",
-    avatar: "MA",
+    text: "Antes eu perdia metade do meu dia respondendo mensagens. Agora meus clientes agendam sozinhos e eu recebo tudo organizado. O faturamento aumentou porque não perco mais nenhum interessado por demora no atendimento.",
+    avatar: "RO",
   },
   {
-    name: "Juliana Costa",
-    role: "CEO · TechBR Fitness",
-    company: "TechBR",
+    name: "Fernanda Costa",
+    role: "Personal Trainer · Studio Fit",
+    company: "Studio Fit",
     companyColor: "#6366f1",
-    text: "Simples e elegante. Passa uma imagem profissional para os meus clientes corporativos e automatiza algo que antes tomava horas.",
-    avatar: "JC",
+    text: "O design do Agendai passa uma imagem de muito profissionalismo. Meus clientes corporativos elogiam a facilidade. É simples, direto e resolve exatamente o que promete sem frescuras.",
+    avatar: "FC",
   },
 ];
 
 const proPlanFeatures = [
   'Agendamentos ilimitados',
-  'Dashboard completo com métricas',
+  'Dashboard profissional com métricas',
   'Link personalizado exclusivo',
-  'Remoção da marca Agendai',
-  'Suporte prioritário 24/7',
+  'Remoção total da marca Agendai',
+  'Suporte prioritário',
   'Integração com Google Calendar',
+  'Lembretes automáticos',
 ];
 
 const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
 export default function LandingPage() {
+  const [demoSlot, setDemoSlot] = useState('09:00');
+
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans">
+    <div className="min-h-screen bg-[#FDFDFD] text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
       {/* Navigation */}
-      <nav className="border-b border-zinc-100 px-6 py-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/10">
+      <nav className="border-b border-zinc-100/60 px-6 py-4 flex justify-between items-center bg-white/70 backdrop-blur-xl sticky top-0 z-50">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 bg-zinc-900 rounded-xl flex items-center justify-center shadow-2xl shadow-zinc-200 ring-1 ring-zinc-900/5">
             <Calendar className="text-white w-5 h-5" />
           </div>
           <span className="text-xl font-display font-bold tracking-tight text-zinc-900">Agendai</span>
         </div>
         <div className="flex items-center gap-6 text-sm font-sans font-semibold">
-          <Link to="/auth" className="text-zinc-500 hover:text-zinc-900 transition-colors">Entrar</Link>
-          <Link to="/checkout" className="bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-zinc-800 transition-all shadow-md shadow-primary/10">
+          <Link to="/auth" className="text-zinc-500 hover:text-zinc-900 transition-colors">Acessar</Link>
+          <Link to="/checkout" className="bg-zinc-900 text-white px-5 py-2.5 rounded-xl text-sm hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-200 ring-1 ring-zinc-900/5">
             Assinar Agora
           </Link>
         </div>
@@ -89,20 +94,20 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center lg:text-left"
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl leading-[1.1] mb-6 lg:mb-8 font-display font-bold tracking-tight text-zinc-900">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl lg:leading-[1.05] mb-6 lg:mb-8 font-display font-bold tracking-tight text-zinc-900">
               Sua agenda no <br className="hidden lg:block" />
-              <span className="italic text-primary">piloto automático.</span>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-500">piloto automático.</span>
             </h1>
             <p className="text-lg sm:text-xl text-zinc-500 mb-8 lg:mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed font-medium">
-              Crie seu link personalizado, compartilhe com seus clientes e deixe o Agendai cuidar do resto. Simples, elegante e eficiente.
+              O Agendai é a forma mais profissional de gerir seus horários. Crie seu link, compartilhe e deixe a tecnologia trabalhar por você.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center lg:justify-start">
-              <Link to="/checkout" className="bg-primary text-white px-8 lg:px-10 py-4 lg:py-5 rounded-xl text-base lg:text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-xl shadow-primary/20">
-                Começar por R$1,99/mês
+              <Link to="/checkout" className="bg-zinc-900 text-white px-8 lg:px-10 py-4 lg:py-5 rounded-xl text-base lg:text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-2xl shadow-zinc-200">
+                Assinar Pro por R$ 47,00/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-            <div className="flex justify-center lg:justify-start mt-8 lg:mt-0">
+            <div className="flex justify-center lg:justify-start mt-10">
               <CompanyLogos />
             </div>
           </motion.div>
@@ -113,28 +118,37 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative mt-8 lg:mt-0"
           >
-            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-10 border border-zinc-100 relative z-10 w-full max-w-md mx-auto lg:max-w-none">
-              <div className="flex items-center justify-between mb-8 md:mb-10">
+            <div className="bg-white rounded-[40px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.08)] p-8 md:p-12 border border-zinc-100/60 relative z-10 w-full max-w-md mx-auto lg:max-w-none">
+              <div className="flex items-center justify-between mb-10">
                 <div>
-                  <h3 className="text-2xl font-sans font-semibold text-zinc-900 capitalize">
+                  <h3 className="text-2xl font-sans font-bold text-zinc-900 capitalize tracking-tight">
                     {format(new Date(), "EEEE, d MMM", { locale: ptBR })}
                   </h3>
-                  <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest mt-1">Selecione um horário</p>
+                  <p className="text-zinc-400 text-[10px] font-sans font-bold uppercase tracking-[0.2em] mt-2">Horários para hoje</p>
                 </div>
-                <div className="w-14 h-14 bg-zinc-50 rounded-xl flex items-center justify-center border border-zinc-100">
-                  <Clock className="w-7 h-7 text-primary" />
+                <div className="w-14 h-14 bg-zinc-50 rounded-2xl flex items-center justify-center border border-zinc-100">
+                  <Clock className="w-6 h-6 text-zinc-900" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                {timeSlots.map((time, i) => (
-                  <div key={time} className={i === 0 ? "bg-primary text-white p-5 rounded-xl text-center shadow-lg shadow-primary/20 font-sans font-semibold" : "bg-zinc-50 p-5 rounded-xl text-center hover:bg-zinc-100 transition-colors cursor-pointer text-zinc-600 font-sans font-semibold border border-zinc-100"}>
+              <div className="grid grid-cols-2 gap-5">
+                {timeSlots.map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setDemoSlot(time)}
+                    className={cn(
+                      "p-6 rounded-2xl text-center font-sans font-bold transition-all duration-300 border",
+                      demoSlot === time
+                        ? "bg-zinc-900 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] border-zinc-900 scale-[1.05]"
+                        : "bg-zinc-50 border-zinc-100 hover:border-zinc-300 hover:bg-white text-zinc-500"
+                    )}
+                  >
                     {time}
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl"></div>
-            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+            <div className="absolute -top-12 -right-12 w-64 h-64 bg-zinc-900/5 rounded-full blur-[100px] -z-10"></div>
+            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-zinc-900/5 rounded-full blur-[120px] -z-10"></div>
           </motion.div>
         </div>
 
@@ -221,10 +235,10 @@ export default function LandingPage() {
                   Plano Pro
                 </span>
                 <div className="flex items-baseline gap-2 mt-6 mb-2">
-                  <h3 className="text-5xl font-display font-bold text-white">R$ 1,99</h3>
+                  <h3 className="text-5xl font-display font-bold text-white">R$ 47,00</h3>
                   <span className="text-zinc-500 text-lg">/mês</span>
                 </div>
-                <p className="text-zinc-400 text-sm mb-10">Tudo o que você precisa para escalar seu negócio.</p>
+                <p className="text-zinc-400 text-sm mb-10">O plano definitivo para profissionais que buscam excelência.</p>
 
                 <ul className="space-y-4 mb-10">
                   {proPlanFeatures.map(item => (
@@ -248,11 +262,11 @@ export default function LandingPage() {
             </motion.div>
           </div>
         </div>
-      </main>
+      </main >
 
       <footer className="border-t border-zinc-100 py-16 px-6 text-center text-sm text-zinc-400 font-sans font-medium">
         <p>© 2026 Agendai. Todos os direitos reservados.</p>
       </footer>
-    </div>
+    </div >
   );
 }
