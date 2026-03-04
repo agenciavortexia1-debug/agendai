@@ -73,7 +73,6 @@ export default function LandingPage() {
           <span className="text-xl font-display font-bold tracking-tight text-zinc-900">Agendai</span>
         </div>
         <div className="flex items-center gap-6 text-sm font-sans font-semibold">
-          <a href="#pricing" className="text-zinc-500 hover:text-zinc-900 transition-colors">Preço</a>
           <Link to="/auth" className="text-zinc-500 hover:text-zinc-900 transition-colors">Entrar</Link>
           <Link to="/checkout" className="bg-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-zinc-800 transition-all shadow-md shadow-primary/10">
             Assinar Agora
