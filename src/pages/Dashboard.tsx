@@ -68,12 +68,9 @@ export default function Dashboard({ session }: { session: Session }) {
     loadData();
   }, [session]);
 
-  // Paywall: redireciona para checkout se a assinatura não estiver ativa
-  useEffect(() => {
-    if (!loading && business && business.subscription_status !== 'active') {
-      navigate('/checkout');
-    }
-  }, [loading, business, navigate]);
+  // Paywall: Retirado o redirecionamento automático
+  // O dashboard já possui UI de "bloqueio" e botões para assinar manualmente,
+  // permitindo que o usuário interaja caso o webhook atrase.
 
   const filteredAppointments = appointments.filter(app =>
     isSameDay(parseISO(app.start_time), selectedDate)

@@ -83,36 +83,39 @@ export default function LandingPage() {
 
       <main className="max-w-6xl mx-auto px-6 pt-20 pb-32">
         {/* Hero Section */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            className="text-center lg:text-left"
           >
-            <h1 className="text-6xl lg:text-7xl leading-[1.1] mb-8 font-display font-bold tracking-tight text-zinc-900">
-              Sua agenda no <br />
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl leading-[1.1] mb-6 lg:mb-8 font-display font-bold tracking-tight text-zinc-900">
+              Sua agenda no <br className="hidden lg:block" />
               <span className="italic text-primary">piloto automático.</span>
             </h1>
-            <p className="text-xl text-zinc-500 mb-10 max-w-md leading-relaxed font-medium">
+            <p className="text-lg sm:text-xl text-zinc-500 mb-8 lg:mb-10 max-w-md mx-auto lg:mx-0 leading-relaxed font-medium">
               Crie seu link personalizado, compartilhe com seus clientes e deixe o Agendai cuidar do resto. Simples, elegante e eficiente.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6">
-              <Link to="/checkout" className="bg-primary text-white px-10 py-5 rounded-xl text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-xl shadow-primary/20">
+            <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center lg:justify-start">
+              <Link to="/checkout" className="bg-primary text-white px-8 lg:px-10 py-4 lg:py-5 rounded-xl text-base lg:text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 group shadow-xl shadow-primary/20">
                 Começar por R$1,99/mês
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
-            <CompanyLogos />
+            <div className="flex justify-center lg:justify-start mt-8 lg:mt-0">
+              <CompanyLogos />
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative"
+            className="relative mt-8 lg:mt-0"
           >
-            <div className="bg-white rounded-2xl shadow-2xl p-10 border border-zinc-100 relative z-10">
-              <div className="flex items-center justify-between mb-10">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-10 border border-zinc-100 relative z-10 w-full max-w-md mx-auto lg:max-w-none">
+              <div className="flex items-center justify-between mb-8 md:mb-10">
                 <div>
                   <h3 className="text-2xl font-sans font-semibold text-zinc-900 capitalize">
                     {format(new Date(), "EEEE, d MMM", { locale: ptBR })}
