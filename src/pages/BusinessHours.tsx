@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { BusinessHour, Business } from '../types';
-import { motion } from 'motion/react';
+import { motion } from 'motion';
 import {
   ArrowLeft,
   Save,

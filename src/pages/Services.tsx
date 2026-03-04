@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Business } from '../types';
-import { motion } from 'motion/react';
-import { 
-  ArrowLeft, 
-  Save, 
-  Loader2, 
+import { motion } from 'motion';
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
   Plus,
   X,
   Scissors,
@@ -32,7 +32,7 @@ export default function Services({ session }: { session: Session }) {
         .select('*')
         .eq('user_id', session.user.id)
         .single();
-      
+
       if (data) setBusiness(data);
       setLoading(false);
     }
@@ -70,9 +70,9 @@ export default function Services({ session }: { session: Session }) {
   };
 
   const removeService = (serviceToRemove: string) => {
-    setBusiness({ 
-      ...business, 
-      services: (business.services || []).filter(s => s !== serviceToRemove) 
+    setBusiness({
+      ...business,
+      services: (business.services || []).filter(s => s !== serviceToRemove)
     });
   };
 
@@ -94,7 +94,7 @@ export default function Services({ session }: { session: Session }) {
             Voltar para Dashboard
           </Link>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl p-6 md:p-10 shadow-sm border border-zinc-200"
@@ -115,8 +115,8 @@ export default function Services({ session }: { session: Session }) {
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Scissors className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={newService}
                       onChange={(e) => setNewService(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
@@ -124,7 +124,7 @@ export default function Services({ session }: { session: Session }) {
                       placeholder="Ex: Corte de Cabelo"
                     />
                   </div>
-                  <button 
+                  <button
                     type="button"
                     onClick={addService}
                     className="bg-primary text-white p-4 rounded-xl hover:bg-zinc-800 transition-all shadow-md"
@@ -132,17 +132,17 @@ export default function Services({ session }: { session: Session }) {
                     <Plus className="w-6 h-6" />
                   </button>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-xs font-sans font-medium uppercase tracking-widest text-black/40 ml-1">Serviços Atuais</label>
                   <div className="flex flex-wrap gap-2">
                     {(business.services || []).map((service) => (
-                      <div 
+                      <div
                         key={service}
                         className="flex items-center gap-2 bg-zinc-50 px-4 py-3 rounded-xl group transition-all hover:bg-zinc-100 border border-zinc-200"
                       >
                         <span className="font-sans font-semibold">{service}</span>
-                        <button 
+                        <button
                           type="button"
                           onClick={() => removeService(service)}
                           className="text-zinc-300 hover:text-red-500 transition-colors"
@@ -166,7 +166,7 @@ export default function Services({ session }: { session: Session }) {
                 </p>
               )}
 
-              <button 
+              <button
                 onClick={handleSave}
                 disabled={saving}
                 className="w-full bg-primary text-white py-4 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70"

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Business, BusinessHour, Appointment, BlockedTime, AvailableSlot } from '../types';
 import { generateAvailableSlots } from '../lib/scheduling';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion';
 import {
   Calendar as CalendarIcon,
   Clock,

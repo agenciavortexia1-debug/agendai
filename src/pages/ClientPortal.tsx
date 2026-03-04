@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Appointment, Business } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  XCircle, 
-  LogOut, 
-  ChevronRight, 
+import { motion, AnimatePresence } from 'motion';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  XCircle,
+  LogOut,
+  ChevronRight,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -55,7 +55,7 @@ export default function ClientPortal() {
 
   const handleCancel = async (id: string) => {
     if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
-    
+
     setCancellingId(id);
     try {
       const { error } = await supabase
@@ -64,8 +64,8 @@ export default function ClientPortal() {
         .eq('id', id);
 
       if (error) throw error;
-      
-      setAppointments(prev => prev.map(app => 
+
+      setAppointments(prev => prev.map(app =>
         app.id === id ? { ...app, status: 'cancelled' } : app
       ));
     } catch (err) {
@@ -88,11 +88,11 @@ export default function ClientPortal() {
     );
   }
 
-  const upcoming = appointments.filter(app => 
+  const upcoming = appointments.filter(app =>
     app.status === 'confirmed' && isAfter(parseISO(app.start_time), new Date())
   );
-  
-  const past = appointments.filter(app => 
+
+  const past = appointments.filter(app =>
     app.status === 'cancelled' || !isAfter(parseISO(app.start_time), new Date())
   );
 
@@ -111,7 +111,7 @@ export default function ClientPortal() {
               </div>
               <span className="text-sm font-medium">{session?.user?.email}</span>
             </div>
-            <button 
+            <button
               onClick={handleLogout}
               className="p-3 bg-white text-red-500 rounded-2xl hover:bg-red-50 transition-colors border border-black/5"
               title="Sair"
@@ -127,11 +127,11 @@ export default function ClientPortal() {
               <Clock className="w-5 h-5 text-[#5A5A40]" />
               Próximos Agendamentos
             </h2>
-            
+
             {upcoming.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {upcoming.map(app => (
-                  <motion.div 
+                  <motion.div
                     key={app.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
@@ -166,7 +166,7 @@ export default function ClientPortal() {
                     </div>
 
                     <div className="flex gap-3">
-                      <button 
+                      <button
                         onClick={() => handleCancel(app.id)}
                         disabled={cancellingId === app.id}
                         className="flex-1 bg-red-50 text-red-600 py-3 rounded-2xl font-sans font-semibold hover:bg-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
@@ -174,7 +174,7 @@ export default function ClientPortal() {
                         {cancellingId === app.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                         Cancelar
                       </button>
-                      <button 
+                      <button
                         onClick={() => navigate(`/b/${app.business.slug}`)}
                         className="flex-1 bg-[#5A5A40] text-white py-3 rounded-2xl font-sans font-semibold hover:bg-[#4a4a35] transition-all flex items-center justify-center gap-2"
                       >
@@ -196,7 +196,7 @@ export default function ClientPortal() {
               <CheckCircle2 className="w-5 h-5 text-black/20" />
               Histórico
             </h2>
-            
+
             <div className="bg-white rounded-[32px] overflow-hidden border border-black/5 shadow-sm">
               {past.length > 0 ? (
                 <div className="divide-y divide-black/5">

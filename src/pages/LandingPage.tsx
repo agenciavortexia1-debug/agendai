@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Shield, ArrowRight, Star, Check, Quote, Zap } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '../lib/utils';
@@ -100,19 +100,6 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center lg:text-left"
           >
-            <div className="inline-flex items-center gap-2 bg-zinc-100/80 px-4 py-1.5 rounded-full border border-zinc-200/50 mb-8">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-zinc-200 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?u=${i + 10}`} alt="User" />
-                  </div>
-                ))}
-              </div>
-              <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">
-                +1.000 profissionais usando hoje
-              </span>
-            </div>
-
             <h1 className="text-4xl sm:text-5xl lg:text-7xl lg:leading-[1.05] mb-6 lg:mb-8 font-display font-bold tracking-tight text-zinc-900">
               Sua agenda no <br className="hidden lg:block" />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-primary to-zinc-500">piloto automático.</span>
@@ -287,22 +274,24 @@ export default function LandingPage() {
           <div className="max-w-md mx-auto">
             <motion.div
               whileHover={{ scale: 1.01 }}
-              className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-12 rounded-3xl shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden border border-white/5"
+              className="bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-800 p-8 md:p-10 rounded-[32px] shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden border border-white/5 min-h-[500px]"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse"></div>
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/10 rounded-full blur-[80px]"></div>
 
-              <div className="relative z-10">
-                <span className="text-primary font-sans font-bold uppercase tracking-widest text-[10px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                  Plano Pro
-                </span>
-                <div className="flex items-baseline gap-2 mt-6 mb-2">
-                  <h3 className="text-5xl font-display font-bold text-white">R$ 39,90</h3>
-                  <span className="text-zinc-500 text-lg">/mês</span>
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="mb-8">
+                  <span className="text-primary font-sans font-bold uppercase tracking-widest text-[10px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                    Plano Pro
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-6 mb-2">
+                    <h3 className="text-5xl font-display font-bold text-white">R$ 39,90</h3>
+                    <span className="text-zinc-500 text-lg">/mês</span>
+                  </div>
+                  <p className="text-zinc-400 text-sm">O plano definitivo para profissionais que buscam excelência.</p>
                 </div>
-                <p className="text-zinc-400 text-sm mb-10">O plano definitivo para profissionais que buscam excelência.</p>
 
-                <ul className="space-y-4 mb-10">
+                <ul className="space-y-4 mb-8 flex-grow">
                   {proPlanFeatures.map(item => (
                     <li key={item} className="flex items-center gap-3 text-zinc-300 font-medium text-sm">
                       <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -315,7 +304,7 @@ export default function LandingPage() {
 
                 <Link
                   to="/checkout"
-                  className="w-full py-5 rounded-2xl bg-primary text-white font-sans font-bold text-lg hover:bg-white hover:text-zinc-900 transition-all text-center block shadow-lg shadow-primary/30"
+                  className="w-full py-4 rounded-xl bg-primary text-white font-sans font-bold text-lg hover:bg-white hover:text-zinc-900 transition-all text-center block shadow-lg shadow-primary/30"
                 >
                   Assinar Agora →
                 </Link>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, User, Loader2, ArrowRight, ChevronLeft } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'motion';
 
 interface ClientBookingAuthProps {
   onSuccess: (userId: string, name: string, email: string) => void;
