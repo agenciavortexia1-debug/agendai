@@ -43,19 +43,24 @@ export default function Dashboard({ session }: { session: Session }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let channel: any;
+
     async function loadData() {
-      // Load business
-      const { data: businessData } = await supabase
-        .from('businesses')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single();
+      try {
+        setLoading(true);
+        // Load business
+        const { data: businessData, error: businessError } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
 
-      if (businessData) {
-        setBusiness(businessData);
+        if (businessError) throw businessError;
 
-        // Load appointments initial data
-        const loadAppointments = async () => {
+        if (businessData) {
+          setBusiness(businessData);
+
+          // Load appointments initial data
           const { data: appData } = await supabase
             .from('appointments')
             .select('*')
@@ -63,35 +68,46 @@ export default function Dashboard({ session }: { session: Session }) {
             .order('start_time', { ascending: true });
 
           if (appData) setAppointments(appData);
-        };
 
-        await loadAppointments();
-
-        // Supabase Realtime: Listen for new, updated or deleted appointments
-        const channel = supabase
-          .channel('appointments_changes')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'appointments',
-              filter: `business_id=eq.${businessData.id}`
-            },
-            () => {
-              loadAppointments(); // Reload on any change
-            }
-          )
-          .subscribe();
-
-        return () => {
-          supabase.removeChannel(channel);
-        };
+          // Supabase Realtime: Listen for new, updated or deleted appointments
+          channel = supabase
+            .channel('appointments_changes')
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'appointments',
+                filter: `business_id=eq.${businessData.id}`
+              },
+              () => {
+                // Load appointments again on any change
+                supabase
+                  .from('appointments')
+                  .select('*')
+                  .eq('business_id', businessData.id)
+                  .order('start_time', { ascending: true })
+                  .then(({ data }) => {
+                    if (data) setAppointments(data);
+                  });
+              }
+            )
+            .subscribe();
+        }
+      } catch (err: any) {
+        console.error('Error loading dashboard data:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     loadData();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, [session]);
 
   // Paywall: Retirado o redirecionamento automático
