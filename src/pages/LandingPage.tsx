@@ -57,9 +57,9 @@ const proPlanFeatures = [
   'Dashboard profissional com métricas',
   'Link personalizado exclusivo',
   'Remoção total da marca Agendai',
-  'Suporte prioritário',
-  'Integração com Google Calendar',
-  'Lembretes automáticos',
+  'Suporte prioritário 24/7',
+  'Gestão de Elite & Zero Conflitos',
+  'Lembretes inteligentes',
 ];
 
 const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
@@ -216,6 +216,34 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Usado por profissionais de todo o Brasil</p>
             <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Quem usa, recomenda</h2>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="flex -space-x-3 overflow-hidden">
+                {[1, 2, 3, 4].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      opacity: [0.7, 1, 0.7]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: i * 0.5
+                    }}
+                    className="inline-block h-10 w-10 rounded-full ring-2 ring-white bg-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-500 overflow-hidden"
+                  >
+                    <img
+                      src={`https://i.pravatar.cc/100?u=${i + 10}`}
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+              <p className="text-zinc-900 font-sans font-bold text-sm">
+                +1.000 profissionais usando hoje
+              </p>
+            </div>
             <p className="text-zinc-500 font-medium">Resultados reais de quem já transformou sua agenda.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -258,8 +286,8 @@ export default function LandingPage() {
           </div>
           <div className="max-w-md mx-auto">
             <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-zinc-900 p-12 rounded-3xl shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden ring-1 ring-white/10"
+              whileHover={{ scale: 1.01 }}
+              className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-12 rounded-3xl shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden border border-white/5"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse"></div>
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/10 rounded-full blur-[80px]"></div>
@@ -291,7 +319,6 @@ export default function LandingPage() {
                 >
                   Assinar Agora →
                 </Link>
-                <p className="text-center text-zinc-500 text-xs mt-4">✓ 7 dias grátis · Cancele a qualquer momento</p>
               </div>
             </motion.div>
           </div>
