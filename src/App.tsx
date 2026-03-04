@@ -14,6 +14,7 @@ import Personalization from './pages/Personalization';
 import Services from './pages/Services';
 import ClientPortal from './pages/ClientPortal';
 import CheckoutPage from './pages/CheckoutPage';
+import ResetPassword from './pages/ResetPassword';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -97,6 +98,9 @@ export default function App() {
 
         {/* Client Portal Route */}
         <Route path="/meus-agendamentos" element={<ClientPortal />} />
+
+        {/* Reset Password Route */}
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

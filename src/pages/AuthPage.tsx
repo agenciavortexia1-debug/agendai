@@ -12,12 +12,12 @@ export default function AuthPage() {
   const isPostPayment = searchParams.get('signup') === 'true';
   const sessionId = searchParams.get('session_id') || '';
 
-  const [isLogin, setIsLogin] = useState(!isPostPayment);
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>(isPostPayment ? 'signup' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Tenta buscar o email usado no Stripe para pre-preencher o campo
   useEffect(() => {
@@ -35,39 +35,42 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      if (isLogin) {
+      if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate('/dashboard');
-      } else {
+      } else if (mode === 'signup') {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setSuccess(true);
+        setSuccess('Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro.');
+      } else if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        setSuccess('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
       }
     } catch (err: any) {
-      if (err.message === 'Failed to fetch') {
-        setError('Erro de conexao com o Supabase. Verifique as credenciais.');
-      } else {
-        setError(err.message);
-      }
+      setError(err.message === 'Failed to fetch' ? 'Erro de conexão com o Supabase.' : err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const titleText = isPostPayment
+  const titleText = mode === 'signup'
     ? 'Crie sua senha'
-    : isLogin
-      ? 'Bem-vindo de volta'
-      : 'Crie sua conta';
+    : mode === 'forgot'
+      ? 'Recuperar senha'
+      : 'Bem-vindo de volta';
 
   const subtitleText = isPostPayment
-    ? 'Pagamento confirmado! Agora so falta criar sua senha para acessar.'
-    : isLogin
-      ? 'Acesse sua agenda profissional'
-      : 'Comece a organizar seu tempo hoje';
+    ? 'Pagamento confirmado! Agora só falta criar sua senha para acessar.'
+    : mode === 'forgot'
+      ? 'Enviaremos um link de recuperação para o seu e-mail.'
+      : 'Acesse sua agenda profissional';
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 transition-all duration-300 bg-zinc-50">
@@ -95,13 +98,12 @@ export default function AuthPage() {
 
         {success ? (
           <div className="bg-emerald-50 text-emerald-700 p-6 rounded-xl text-center border border-emerald-100">
-            <p className="font-sans font-semibold">Conta criada com sucesso!</p>
-            <p className="text-sm mt-1">Verifique seu e-mail para confirmar o cadastro e depois faca o login.</p>
+            <p className="font-sans font-semibold">{success}</p>
             <button
-              onClick={() => { setIsLogin(true); setSuccess(false); }}
+              onClick={() => { setMode('login'); setSuccess(null); }}
               className="mt-4 text-emerald-800 font-sans font-semibold underline"
             >
-              Fazer Login
+              Voltar para Login
             </button>
           </div>
         ) : (
@@ -121,20 +123,33 @@ export default function AuthPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
-                  placeholder="••••••••"
-                />
+            {mode !== 'forgot' && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Senha</label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => setMode('forgot')}
+                      className="text-[10px] font-sans font-bold text-primary uppercase tracking-widest hover:underline"
+                    >
+                      Esqueceu?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                    placeholder="••••••••"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {error && (
               <p className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-xl border border-red-100">
@@ -147,21 +162,26 @@ export default function AuthPage() {
               disabled={loading}
               className="w-full bg-primary text-white py-4 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Entrar' : 'Criar Conta')}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                mode === 'signup' ? 'Criar Conta' : mode === 'forgot' ? 'Enviar Link' : 'Entrar'
+              )}
             </button>
 
-            {/* Nao mostrar opcao de trocar para login quando vier do pos-pagamento */}
-            {!isPostPayment && (
-              <div className="text-center mt-6">
+            <div className="text-center mt-6">
+              {mode === 'forgot' ? (
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => setMode('login')}
                   className="text-sm text-zinc-400 hover:text-zinc-900 transition-colors font-medium"
                 >
-                  {isLogin ? 'Nao tem uma conta? Cadastre-se' : 'Ja tem uma conta? Entre'}
+                  Voltar para o login
                 </button>
-              </div>
-            )}
+              ) : isPostPayment ? null : (
+                <p className="text-sm text-zinc-400 font-medium">
+                  Novo aqui? <Link to="/checkout" className="text-primary font-bold hover:underline">Assine o Plano Pro</Link>
+                </p>
+              )}
+            </div>
           </form>
         )}
       </motion.div>
