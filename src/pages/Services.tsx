@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Service } from '../types';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import {
   ArrowLeft,
   Loader2,
@@ -14,7 +14,11 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import toast from 'react-hot-toast';
+
+const toast = {
+  success: (msg: string) => alert(msg),
+  error: (msg: string) => alert('Erro: ' + msg),
+};
 
 export default function Services({ session }: { session: Session }) {
   const [services, setServices] = useState<Service[]>([]);

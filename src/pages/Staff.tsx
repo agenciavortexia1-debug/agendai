@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Plus, Edit2, Trash2, Shield, Users, AlertCircle } from 'lucide-react';
 import { Professional, Service } from '../types';
-import toast from 'react-hot-toast';
+
+const toast = {
+    success: (msg: string) => alert(msg),
+    error: (msg: string) => alert('Erro: ' + msg),
+};
 
 export default function Staff({ session }: { session: any }) {
     const [professionals, setProfessionals] = useState<Professional[]>([]);

@@ -25,7 +25,7 @@ import {
   Minimize2,
   CheckCircle2,
   XCircle,
-  Currency
+  DollarSign
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addMonths, subMonths } from 'date-fns';
