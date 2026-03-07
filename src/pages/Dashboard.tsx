@@ -74,7 +74,16 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
 
         if (staffSession) {
           const { data, error } = await supabase.from('businesses').select('*').eq('id', staffSession.business_id).single();
-          if (!error && data) bData = data;
+          if (!error && data) {
+            bData = data;
+          } else {
+            // Fallback for staff if RLS blocks the query
+            bData = {
+              id: staffSession.business_id,
+              name: staffSession.business_name || 'Negócio',
+              slug: staffSession.business_slug || ''
+            };
+          }
         } else if (session) {
           const { data, error } = await supabase.from('businesses').select('*').eq('user_id', session.user.id).single();
           if (!error && data) bData = data;
@@ -212,6 +221,13 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
   }
 
   if (!business) {
+    if (staffSession) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-50 text-center">
+          <p className="text-zinc-500">Localizando informações da agenda...</p>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-50">
         <motion.div
