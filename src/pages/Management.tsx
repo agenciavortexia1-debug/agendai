@@ -33,6 +33,7 @@ export default function Management({ session }: { session: any }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any>(null);
     const [uploading, setUploading] = useState(false);
+    const [profServicesData, setProfServicesData] = useState<any[]>([]);
 
     // Form States
     const [formData, setFormData] = useState({
@@ -68,13 +69,15 @@ export default function Management({ session }: { session: any }) {
                 .single();
 
             if (businessData) {
-                const [profRes, servRes] = await Promise.all([
+                const [profRes, servRes, psRes] = await Promise.all([
                     supabase.from('professionals').select('*').eq('business_id', businessData.id).order('created_at'),
-                    supabase.from('services').select('*').eq('business_id', businessData.id).order('name')
+                    supabase.from('services').select('*').eq('business_id', businessData.id).order('name'),
+                    supabase.from('professional_services').select('*')
                 ]);
 
                 setProfessionals(profRes.data || []);
                 setServices(servRes.data || []);
+                setProfServicesData(psRes.data || []);
             }
         } catch (error) {
             console.error('Error fetching management data:', error);
@@ -266,7 +269,8 @@ export default function Management({ session }: { session: any }) {
                                                     phone: prof.phone || '',
                                                     role: prof.role as any,
                                                     avatar_url: prof.avatar_url || '',
-                                                    access_screens: prof.access_screens || ['agenda']
+                                                    access_screens: prof.access_screens || ['agenda'],
+                                                    selectedServices: profServicesData.filter(ps => ps.professional_id === prof.id).map(ps => ps.service_id)
                                                 });
                                                 setIsModalOpen(true);
                                             }}
@@ -427,6 +431,39 @@ export default function Management({ session }: { session: any }) {
                                                     className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-zinc-900 outline-none"
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Services Selection */}
+                                        <div className="space-y-3 pt-4 border-t border-zinc-100">
+                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Serviços que realiza</label>
+                                            {services.length === 0 ? (
+                                                <p className="text-xs text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                                                    Cadastre serviços antes de vinculá-los aos colaboradores.
+                                                </p>
+                                            ) : (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[150px] overflow-y-auto px-1 custom-scrollbar">
+                                                    {services.map(svc => (
+                                                        <label key={svc.id} className="flex items-center gap-3 p-3 bg-zinc-50 border border-zinc-200 rounded-xl cursor-pointer hover:border-zinc-300 transition-all select-none">
+                                                            <div className="relative flex items-center justify-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="peer appearance-none w-5 h-5 border-2 border-zinc-300 rounded focus:ring-2 focus:ring-zinc-900 focus:ring-offset-1 transition-all checked:bg-zinc-900 checked:border-zinc-900 cursor-pointer"
+                                                                    checked={formData.selectedServices.includes(svc.id)}
+                                                                    onChange={(e) => {
+                                                                        if (e.target.checked) {
+                                                                            setFormData(prev => ({ ...prev, selectedServices: [...prev.selectedServices, svc.id] }));
+                                                                        } else {
+                                                                            setFormData(prev => ({ ...prev, selectedServices: prev.selectedServices.filter(id => id !== svc.id) }));
+                                                                        }
+                                                                    }}
+                                                                />
+                                                                <Check className="w-3 h-3 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-zinc-700">{svc.name}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </>
