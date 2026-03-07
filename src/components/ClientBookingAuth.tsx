@@ -104,7 +104,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
         <div className="space-y-4 text-center">
           <button
             onClick={() => onSuccess(session.user.id, session.user.user_metadata?.full_name || '', session.user.email || '')}
-            className="w-full bg-[var(--primary-color)] text-white py-4 rounded-xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
+            className="w-full bg-[var(--primary-color)] text-white py-4 rounded-2xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
           >
             Confirmar e Continuar
             <ArrowRight className="w-4 h-4" />
@@ -124,7 +124,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#f5f5f0] border-none rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
+                className="w-full bg-[#f5f5f0] border-none rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
                 placeholder="Digite seu nome"
               />
             </div>
@@ -139,14 +139,14 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#f5f5f0] border-none rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
+                className="w-full bg-[#f5f5f0] border-none rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
                 placeholder="Crie uma senha"
               />
             </div>
           </div>
 
           {error && (
-            <p className="text-red-500 text-xs text-center bg-red-50 p-3 rounded-lg border border-red-100">
+            <p className="text-red-500 text-xs text-center bg-red-50 p-3 rounded-xl border border-red-100">
               {error}
             </p>
           )}
@@ -154,7 +154,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[var(--primary-color)] text-white py-4 rounded-xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+            className="w-full bg-[var(--primary-color)] text-white py-4 rounded-2xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <>
