@@ -27,6 +27,7 @@ export default function Analytics({ session }: { session: Session }) {
         from: subDays(new Date(), 30),
         to: new Date()
     });
+    const [showRevenueDetail, setShowRevenueDetail] = useState(false);
 
     useEffect(() => {
         async function loadData() {
@@ -144,6 +145,17 @@ export default function Analytics({ session }: { session: Session }) {
         .map(([name, count]) => ({ name, count }));
     const maxProfVal = Math.max(...professionalData.map(d => d.count), 1);
 
+    // Faturamento por Colaborador
+    const professionalRevenue: Record<string, number> = {};
+    filteredApps.forEach(app => {
+        if (app.attended === true && app.professional?.name && app.final_price) {
+            professionalRevenue[app.professional.name] = (professionalRevenue[app.professional.name] || 0) + Number(app.final_price);
+        }
+    });
+    const professionalRevenueData = Object.entries(professionalRevenue)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, revenue]) => ({ name, revenue }));
+
     // Serviços mais realizados
     const serviceCounts: Record<string, number> = {};
     filteredApps.forEach(app => {
@@ -223,15 +235,20 @@ export default function Analytics({ session }: { session: Session }) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        className="bg-white p-5 rounded-lg border border-zinc-200 shadow-sm"
+                        className="bg-white p-5 rounded-lg border border-zinc-200 shadow-sm cursor-pointer hover:border-emerald-200 transition-all group"
+                        onClick={() => setShowRevenueDetail(true)}
                     >
-                        <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center mb-3">
-                            <span className="text-emerald-600 font-bold">R$</span>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                                <span className="text-emerald-600 font-bold">R$</span>
+                            </div>
+                            <Activity className="w-4 h-4 text-zinc-300 group-hover:text-emerald-500 transition-colors" />
                         </div>
                         <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest">Faturamento Período</p>
                         <h3 className="text-2xl font-display font-bold text-zinc-900 mt-1">
                             R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </h3>
+                        <p className="text-[10px] text-emerald-600 mt-2 font-medium opacity-0 group-hover:opacity-100 transition-opacity">Clique para detalhar por colaborador</p>
                     </motion.div>
 
                     <motion.div
@@ -433,6 +450,74 @@ export default function Analytics({ session }: { session: Session }) {
                     </div>
                 </div>
             </main>
+
+            {/* Modal de Detalhamento de Faturamento */}
+            {showRevenueDetail && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setShowRevenueDetail(false)}
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative z-10 overflow-hidden"
+                    >
+                        <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-xl font-bold text-zinc-900">Faturamento por Colaborador</h3>
+                                <p className="text-xs text-zinc-500">Detalhamento do faturamento total</p>
+                            </div>
+                            <button
+                                onClick={() => setShowRevenueDetail(false)}
+                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                            >
+                                <Users className="w-5 h-5 text-zinc-400 rotate-45" /> {/* Usando Users como X improvisado ou importar X */}
+                                <span className="sr-only">Fechar</span>
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            {professionalRevenueData.length === 0 ? (
+                                <p className="text-center text-zinc-500 py-8 italic">Nenhum faturamento registrado para este período.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {professionalRevenueData.map((item, i) => (
+                                        <div key={i} className="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                                                    {item.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-zinc-900">{item.name}</p>
+                                                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest">Faturamento Real</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-lg font-display font-bold text-emerald-600">
+                                                    R$ {item.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </p>
+                                                <p className="text-[10px] text-zinc-400">
+                                                    {Math.round((item.revenue / totalRevenue) * 100)}% do total
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-6 bg-zinc-50 border-t border-zinc-100">
+                            <button
+                                onClick={() => setShowRevenueDetail(false)}
+                                className="w-full bg-zinc-900 text-white py-3 rounded-xl font-semibold hover:bg-zinc-800 transition-all"
+                            >
+                                Entendido
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 }

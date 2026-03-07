@@ -54,13 +54,7 @@ export default function AuthPage() {
         setSuccess('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
       }
     } catch (err: any) {
-      console.error('Auth error:', err);
-      if (err.message === 'Failed to fetch') {
-        // Supabase sometimes returns 'Failed to fetch' instead of a proper error when rate limited (429) due to missing CORS headers
-        setError('Erro de conexão. Se você solicitou recentemente, aguarde alguns minutos e tente novamente.');
-      } else {
-        setError(err.message);
-      }
+      setError(err.message === 'Failed to fetch' ? 'Erro de conexão com o Supabase.' : err.message);
     } finally {
       setLoading(false);
     }
@@ -88,10 +82,10 @@ export default function AuthPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-xl p-10 shadow-xl border border-zinc-100"
+        className="w-full max-w-md bg-white rounded-2xl p-10 shadow-xl border border-zinc-100"
       >
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-primary/10">
+          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-primary/10">
             <Calendar className="text-white w-6 h-6" />
           </div>
           <h2 className="text-3xl font-sans font-semibold text-zinc-900 text-center">
@@ -103,7 +97,7 @@ export default function AuthPage() {
         </div>
 
         {success ? (
-          <div className="bg-emerald-50 text-emerald-700 p-6 rounded-lg text-center border border-emerald-100">
+          <div className="bg-emerald-50 text-emerald-700 p-6 rounded-xl text-center border border-emerald-100">
             <p className="font-sans font-semibold">{success}</p>
             <button
               onClick={() => { setMode('login'); setSuccess(null); }}
@@ -123,7 +117,7 @@ export default function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                  className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
                   placeholder="seu@email.com"
                 />
               </div>
@@ -150,7 +144,7 @@ export default function AuthPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                    className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
                     placeholder="••••••••"
                   />
                 </div>
@@ -158,7 +152,7 @@ export default function AuthPage() {
             )}
 
             {error && (
-              <p className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-100">
+              <p className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-xl border border-red-100">
                 {error}
               </p>
             )}
@@ -166,7 +160,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-white py-4 rounded-lg font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full bg-primary text-white py-4 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 mode === 'signup' ? 'Criar Conta' : mode === 'forgot' ? 'Enviar Link' : 'Entrar'

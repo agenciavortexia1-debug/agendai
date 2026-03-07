@@ -11,27 +11,21 @@ import PublicBooking from './pages/PublicBooking';
 import BusinessSettings from './pages/BusinessSettings';
 import BusinessHours from './pages/BusinessHours';
 import Personalization from './pages/Personalization';
-import Services from './pages/Services';
-import Staff from './pages/Staff';
+import Management from './pages/Management';
+import StaffLogin from './pages/StaffLogin';
 import ClientPortal from './pages/ClientPortal';
 import CheckoutPage from './pages/CheckoutPage';
 import ResetPassword from './pages/ResetPassword';
-import Analytics from './pages/Analytics';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        setSession(session);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching session:', err);
-        setLoading(false);
-      });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -81,10 +75,6 @@ export default function App() {
           element={session ? <Dashboard session={session} /> : <Navigate to="/auth" />}
         />
         <Route
-          path="/dashboard/analytics"
-          element={session ? <Analytics session={session} /> : <Navigate to="/auth" />}
-        />
-        <Route
           path="/dashboard/settings"
           element={session ? <BusinessSettings session={session} /> : <Navigate to="/auth" />}
         />
@@ -97,16 +87,15 @@ export default function App() {
           element={session ? <Personalization session={session} /> : <Navigate to="/auth" />}
         />
         <Route
-          path="/dashboard/services"
-          element={session ? <Services session={session} /> : <Navigate to="/auth" />}
-        />
-        <Route
-          path="/dashboard/staff"
-          element={session ? <Staff session={session} /> : <Navigate to="/auth" />}
+          path="/dashboard/management"
+          element={session ? <Management session={session} /> : <Navigate to="/auth" />}
         />
 
         {/* Public Booking Route */}
         <Route path="/b/:slug" element={<PublicBooking />} />
+
+        {/* Staff Area */}
+        <Route path="/staff/login" element={<StaffLogin />} />
 
         {/* Checkout Route - redireciona ao Stripe */}
         <Route path="/checkout" element={<CheckoutPage />} />

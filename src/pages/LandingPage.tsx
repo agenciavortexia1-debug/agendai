@@ -57,9 +57,9 @@ const proPlanFeatures = [
   'Dashboard profissional com métricas',
   'Link personalizado exclusivo',
   'Remoção total da marca Agendai',
-  'Suporte prioritário 24/7',
-  'Gestão de Elite & Zero Conflitos',
-  'Lembretes inteligentes',
+  'Suporte prioritário',
+  'Integração com Google Calendar',
+  'Lembretes automáticos',
 ];
 
 const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
@@ -72,7 +72,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="border-b border-zinc-100/60 px-6 py-4 flex justify-between items-center bg-white/70 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-2.5 group cursor-pointer">
-          <div className="w-10 h-10 bg-gradient-to-br from-zinc-800 to-black rounded-lg flex items-center justify-center shadow-xl group-hover:shadow-primary/20 transition-all duration-500 ring-1 ring-white/10">
+          <div className="w-10 h-10 bg-gradient-to-br from-zinc-800 to-black rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-primary/20 transition-all duration-500 ring-1 ring-white/10">
             <Calendar className="text-white w-5 h-5" />
           </div>
           <div className="flex flex-col -space-y-1">
@@ -83,8 +83,8 @@ export default function LandingPage() {
         <div className="flex items-center gap-6 text-sm font-sans font-semibold">
           <Link to="/auth" className="text-zinc-500 hover:text-zinc-900 transition-colors">Acessar</Link>
           <Link to="/checkout" className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-zinc-400 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-            <div className="relative bg-zinc-900 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-zinc-800 transition-all shadow-xl ring-1 ring-zinc-900/5">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-zinc-400 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+            <div className="relative bg-zinc-900 text-white px-5 py-2.5 rounded-xl text-sm hover:bg-zinc-800 transition-all shadow-xl ring-1 ring-zinc-900/5">
               Assinar Agora
             </div>
           </Link>
@@ -100,6 +100,19 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center lg:text-left"
           >
+            <div className="inline-flex items-center gap-2 bg-zinc-100/80 px-4 py-1.5 rounded-full border border-zinc-200/50 mb-8">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-zinc-200 overflow-hidden">
+                    <img src={`https://i.pravatar.cc/100?u=${i + 10}`} alt="User" />
+                  </div>
+                ))}
+              </div>
+              <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-widest">
+                +1.000 profissionais usando hoje
+              </span>
+            </div>
+
             <h1 className="text-4xl sm:text-5xl lg:text-7xl lg:leading-[1.05] mb-6 lg:mb-8 font-display font-bold tracking-tight text-zinc-900">
               Sua agenda no <br className="hidden lg:block" />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 via-primary to-zinc-500">piloto automático.</span>
@@ -109,45 +122,14 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center lg:justify-start">
               <Link to="/checkout" className="group relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-zinc-900/0 rounded-xl blur-xl transition-all duration-1000 group-hover:blur-2xl"></div>
-                <div className="relative bg-zinc-900 text-white px-8 lg:px-10 py-4 lg:py-5 rounded-xl text-base lg:text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-zinc-200 ring-1 ring-white/10">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-zinc-900/0 rounded-2xl blur-xl transition-all duration-1000 group-hover:blur-2xl"></div>
+                <div className="relative bg-zinc-900 text-white px-8 lg:px-10 py-4 lg:py-5 rounded-2xl text-base lg:text-lg font-sans font-semibold hover:bg-zinc-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-zinc-200 ring-1 ring-white/10">
                   Assinar Pro por R$ 39,90/mês
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-primary" />
                 </div>
               </Link>
             </div>
-
-            {/* Social Proof inside Hero */}
-            <div className="flex items-center justify-center lg:justify-start gap-2 mt-10">
-              <div className="flex -space-x-3 overflow-hidden">
-                {[1, 2, 3, 4].map((i) => (
-                  <motion.div
-                    key={i}
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.7, 1, 0.7]
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.5
-                    }}
-                    className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-zinc-200 flex items-center justify-center text-[10px] font-bold text-zinc-500 overflow-hidden"
-                  >
-                    <img
-                      src={`https://i.pravatar.cc/100?u=${i + 10}`}
-                      alt="User"
-                      className="w-full h-full object-cover"
-                    />
-                  </motion.div>
-                ))}
-              </div>
-              <p className="text-zinc-900 font-sans font-bold text-sm">
-                +1.000 profissionais usando hoje
-              </p>
-            </div>
-
-            <div className="flex justify-center lg:justify-start mt-6 opacity-60">
+            <div className="flex justify-center lg:justify-start mt-10">
               <CompanyLogos />
             </div>
           </motion.div>
@@ -178,7 +160,7 @@ export default function LandingPage() {
                   </h3>
                   <p className="text-zinc-400 text-[10px] font-sans font-bold uppercase tracking-[0.2em] mt-2">Horários para hoje</p>
                 </div>
-                <div className="w-14 h-14 bg-zinc-50 rounded-xl flex items-center justify-center border border-zinc-100 shadow-inner">
+                <div className="w-14 h-14 bg-zinc-50 rounded-2xl flex items-center justify-center border border-zinc-100 shadow-inner">
                   <Clock className="w-6 h-6 text-primary" />
                 </div>
               </div>
@@ -188,7 +170,7 @@ export default function LandingPage() {
                     key={time}
                     onClick={() => setDemoSlot(time)}
                     className={cn(
-                      "p-6 rounded-xl text-center font-sans font-bold transition-all duration-300 border",
+                      "p-6 rounded-2xl text-center font-sans font-bold transition-all duration-300 border",
                       demoSlot === time
                         ? "bg-zinc-900 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] border-zinc-900 scale-[1.05]"
                         : "bg-zinc-50 border-zinc-100 hover:border-zinc-300 hover:bg-white text-zinc-500"
@@ -207,21 +189,21 @@ export default function LandingPage() {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-16 mt-40">
           <div className="space-y-6 group">
-            <div className="w-14 h-14 bg-white rounded-lg shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
               <Shield className="w-7 h-7 text-primary" />
             </div>
             <h4 className="text-xl font-sans font-semibold text-zinc-900">Segurança Total</h4>
             <p className="text-zinc-500 leading-relaxed font-medium">Seus dados e de seus clientes protegidos com criptografia de ponta a ponta.</p>
           </div>
           <div className="space-y-6 group">
-            <div className="w-14 h-14 bg-white rounded-lg shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
               <Calendar className="w-7 h-7 text-primary" />
             </div>
             <h4 className="text-xl font-sans font-semibold text-zinc-900">Link Personalizado</h4>
             <p className="text-zinc-500 leading-relaxed font-medium">Crie um link profissional e compartilhe em suas redes sociais com um clique.</p>
           </div>
           <div className="space-y-6 group">
-            <div className="w-14 h-14 bg-white rounded-lg shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 bg-white rounded-xl shadow-md flex items-center justify-center border border-zinc-100 group-hover:scale-110 transition-transform">
               <Zap className="w-7 h-7 text-primary" />
             </div>
             <h4 className="text-xl font-sans font-semibold text-zinc-900">Automação Total</h4>
@@ -234,14 +216,14 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4">Usado por profissionais de todo o Brasil</p>
             <h2 className="text-4xl font-display font-bold text-zinc-900 mb-4">Quem usa, recomenda</h2>
-            <p className="text-zinc-500 font-medium">Resultados reais de quem já transformou sua agenda com o Agendai.</p>
+            <p className="text-zinc-500 font-medium">Resultados reais de quem já transformou sua agenda.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {testimonials.map((t, i) => (
               <motion.div
                 key={i}
                 whileHover={{ y: -5 }}
-                className="bg-white p-8 rounded-xl border border-zinc-100 shadow-sm relative flex flex-col"
+                className="bg-white p-8 rounded-2xl border border-zinc-100 shadow-sm relative flex flex-col"
               >
                 <Quote className="absolute top-6 right-6 w-8 h-8 text-zinc-100" />
                 <div className="flex gap-1 mb-5">
@@ -252,7 +234,7 @@ export default function LandingPage() {
                 <p className="text-zinc-600 italic mb-8 leading-relaxed flex-grow">"{t.text}"</p>
                 <div className="flex items-center gap-3 pt-5 border-t border-zinc-50">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                     style={{ backgroundColor: t.companyColor }}
                   >
                     {t.avatar}
@@ -276,25 +258,23 @@ export default function LandingPage() {
           </div>
           <div className="max-w-md mx-auto">
             <motion.div
-              whileHover={{ scale: 1.01 }}
-              className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 md:p-8 rounded-[32px] shadow-2xl shadow-primary/10 flex flex-col relative overflow-hidden border border-white/5 min-h-[420px]"
+              whileHover={{ scale: 1.02 }}
+              className="bg-zinc-900 p-12 rounded-3xl shadow-2xl shadow-primary/20 flex flex-col relative overflow-hidden ring-1 ring-white/10"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse"></div>
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-primary/10 rounded-full blur-[80px]"></div>
 
-              <div className="relative z-10 flex flex-col h-full">
-                <div className="mb-8">
-                  <span className="text-primary font-sans font-bold uppercase tracking-widest text-[10px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                    Plano Pro
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-6 mb-2">
-                    <h3 className="text-5xl font-display font-bold text-white">R$ 39,90</h3>
-                    <span className="text-zinc-500 text-lg">/mês</span>
-                  </div>
-                  <p className="text-zinc-400 text-sm">O plano definitivo para profissionais que buscam excelência.</p>
+              <div className="relative z-10">
+                <span className="text-primary font-sans font-bold uppercase tracking-widest text-[10px] bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                  Plano Pro
+                </span>
+                <div className="flex items-baseline gap-2 mt-6 mb-2">
+                  <h3 className="text-5xl font-display font-bold text-white">R$ 39,90</h3>
+                  <span className="text-zinc-500 text-lg">/mês</span>
                 </div>
+                <p className="text-zinc-400 text-sm mb-10">O plano definitivo para profissionais que buscam excelência.</p>
 
-                <ul className="space-y-4 mb-8 flex-grow">
+                <ul className="space-y-4 mb-10">
                   {proPlanFeatures.map(item => (
                     <li key={item} className="flex items-center gap-3 text-zinc-300 font-medium text-sm">
                       <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -307,10 +287,11 @@ export default function LandingPage() {
 
                 <Link
                   to="/checkout"
-                  className="w-full py-4 rounded-lg bg-primary text-white font-sans font-bold text-lg hover:bg-white hover:text-zinc-900 transition-all text-center block shadow-lg shadow-primary/30"
+                  className="w-full py-5 rounded-2xl bg-primary text-white font-sans font-bold text-lg hover:bg-white hover:text-zinc-900 transition-all text-center block shadow-lg shadow-primary/30"
                 >
                   Assinar Agora →
                 </Link>
+                <p className="text-center text-zinc-500 text-xs mt-4">✓ 7 dias grátis · Cancele a qualquer momento</p>
               </div>
             </motion.div>
           </div>
