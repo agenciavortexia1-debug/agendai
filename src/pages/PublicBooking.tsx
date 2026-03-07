@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Business, BusinessHour, Appointment, BlockedTime, AvailableSlot } from '../types';
+import { Business, Appointment, AvailableSlot, Service, Professional } from '../types';
 import { generateAvailableSlots } from '../lib/scheduling';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -9,12 +9,12 @@ import {
   Clock,
   User,
   Phone,
-  Mail,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Scissors
 } from 'lucide-react';
 import {
   format,
@@ -33,16 +33,26 @@ import ClientBookingAuth from '../components/ClientBookingAuth';
 export default function PublicBooking() {
   const { slug } = useParams<{ slug: string }>();
   const [business, setBusiness] = useState<Business | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [profServicesData, setProfServicesData] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
 
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(startOfToday());
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
-  const [step, setStep] = useState<'auth' | 'date' | 'form' | 'success'>('auth');
+
+  // Mudei os passos para suportar o novo fluxo
+  type Step = 'auth' | 'service' | 'professional' | 'date' | 'form' | 'success';
+  const [step, setStep] = useState<Step>('auth');
+
   const [userAppointments, setUserAppointments] = useState<Appointment[]>([]);
   const [loadingUserAppointments, setLoadingUserAppointments] = useState(false);
   const [reschedulingAppointment, setReschedulingAppointment] = useState<Appointment | null>(null);
@@ -52,7 +62,6 @@ export default function PublicBooking() {
     name: '',
     email: '',
     phone: '',
-    service: '',
     notes: ''
   });
   const [booking, setBooking] = useState(false);
@@ -66,8 +75,7 @@ export default function PublicBooking() {
           ...prev,
           email: session.user.email || '',
           name: session.user.user_metadata?.full_name || prev.name,
-          phone: session.user.user_metadata?.phone || prev.phone,
-          service: ''
+          phone: session.user.user_metadata?.phone || prev.phone
         }));
       }
     });
@@ -79,8 +87,7 @@ export default function PublicBooking() {
           ...prev,
           email: session.user.email || '',
           name: session.user.user_metadata?.full_name || prev.name,
-          phone: session.user.user_metadata?.phone || prev.phone,
-          service: ''
+          phone: session.user.user_metadata?.phone || prev.phone
         }));
       }
     });
@@ -114,41 +121,61 @@ export default function PublicBooking() {
     }
   }, [business, session]);
 
-  // Load business data
+  // Load business data, services and professionals
   useEffect(() => {
-    async function loadBusiness() {
+    async function loadBusinessData() {
       if (!slug) return;
 
-      const { data, error } = await supabase
+      const { data: bData, error } = await supabase
         .from('businesses')
         .select('*')
         .eq('slug', slug)
         .single();
 
-      if (error || !data) {
-        if (error?.message === 'Failed to fetch') {
-          setError('Erro de conexão com o Supabase. Verifique se as credenciais estão corretas.');
-        } else {
-          setError('Negócio não encontrado');
-        }
-      } else {
-        setBusiness(data);
+      if (error || !bData) {
+        setError(error?.message === 'Failed to fetch' ? 'Erro de conexão.' : 'Negócio não encontrado');
+        setLoading(false);
+        return;
       }
+
+      setBusiness(bData);
+
+      // Load Services
+      const { data: sData } = await supabase
+        .from('services')
+        .select('*')
+        .eq('business_id', bData.id)
+        .order('name');
+      if (sData) setServices(sData);
+
+      // Load Professionals
+      const { data: pData } = await supabase
+        .from('professionals')
+        .select('*')
+        .eq('business_id', bData.id);
+      if (pData) setProfessionals(pData);
+
+      // Load relations (Which professional does what service)
+      const { data: psData } = await supabase
+        .from('professional_services')
+        .select('*');
+      if (psData) setProfServicesData(psData);
+
       setLoading(false);
     }
-    loadBusiness();
+    loadBusinessData();
   }, [slug]);
 
-  // Load slots when date changes
+  // Load slots when date or professional changes
   useEffect(() => {
     async function loadSlots() {
-      if (!business || !selectedDate) return;
+      if (!business || !selectedDate || !selectedService || !selectedProfessional) return;
       setLoadingSlots(true);
 
       try {
         const weekday = selectedDate.getDay();
 
-        // 1. Get business hours for this day from the business_hours table
+        // 1. Get business hours
         const { data: hours } = await supabase
           .from('business_hours')
           .select('*')
@@ -161,7 +188,7 @@ export default function PublicBooking() {
           return;
         }
 
-        // 2. Get appointments for this day to lock slots
+        // 2. Get appointments specifically for the selected professional on this day
         const dayStart = startOfDay(selectedDate).toISOString();
         const dayEnd = endOfDay(selectedDate).toISOString();
 
@@ -169,11 +196,12 @@ export default function PublicBooking() {
           .from('appointments')
           .select('*')
           .eq('business_id', business.id)
+          .eq('professional_id', selectedProfessional.id)
           .gte('start_time', dayStart)
           .lte('start_time', dayEnd)
           .neq('status', 'cancelled');
 
-        // 3. Get blocked times (from the barber's manual blocks)
+        // 3. Get generic blocked times of the business
         const { data: blocked } = await supabase
           .from('blocked_times')
           .select('*')
@@ -181,11 +209,13 @@ export default function PublicBooking() {
           .gte('start_time', dayStart)
           .lte('start_time', dayEnd);
 
-        // 4. Generate slots using the business_hours table data
+        // 4. Generate slots using service duration
+        const duration = selectedService.duration_minutes || 30;
+
         const slots = generateAvailableSlots(
           hours.open_time,
           hours.close_time,
-          business.appointment_duration_minutes,
+          duration,
           appointmentsData || [],
           blocked || [],
           selectedDate
@@ -199,26 +229,38 @@ export default function PublicBooking() {
       }
     }
 
-    if (business) loadSlots();
-  }, [business, selectedDate]);
-
-  const handleSlotSelect = (slot: AvailableSlot) => {
-    setSelectedSlot(slot);
-    setStep('form');
-  };
+    if (step === 'date') {
+      loadSlots();
+    }
+  }, [business, selectedDate, selectedProfessional, selectedService, step]);
 
   const handleAuthSuccess = (userId: string, name: string, email: string) => {
     setFormData(prev => ({ ...prev, name, email }));
     setHasConfirmedAuth(true);
-    setStep('date');
+    setStep('service');
   };
 
   const handleSignOut = () => {
-    // Logout local apenas para nao derrubar a sessao do dono em outras abas
     setHasConfirmedAuth(false);
     setStep('auth');
     setSession(null);
     setUserAppointments([]);
+  };
+
+  const handleServiceSelect = (service: Service) => {
+    setSelectedService(service);
+    setSelectedProfessional(null); // reset prof if changing service
+    setStep('professional');
+  };
+
+  const handleProfessionalSelect = (prof: Professional) => {
+    setSelectedProfessional(prof);
+    setStep('date');
+  };
+
+  const handleSlotSelect = (slot: AvailableSlot) => {
+    setSelectedSlot(slot);
+    setStep('form');
   };
 
   const handleCancelAppointment = async (id: string) => {
@@ -233,17 +275,17 @@ export default function PublicBooking() {
       .eq('id', id);
 
     if (error) {
-      alert('Erro ao cancelar agendamento: ' + error.message);
+      alert('Erro ao cancelar: ' + error.message);
     } else {
-      alert('Agendamento cancelado com sucesso!');
+      alert('Cancelado com sucesso!');
       setUserAppointments(prev => prev.filter(a => a.id !== id));
     }
   };
 
   const handleRescheduleClick = (appointment: Appointment) => {
     setReschedulingAppointment(appointment);
-    setStep('date');
-    // Scroll to calendar
+    // Para simplificar, na remarcação nós resetamos a seleção de serviço e profissional
+    setStep('service');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -275,7 +317,8 @@ export default function PublicBooking() {
             start_time: selectedSlot.start.toISOString(),
             end_time: selectedSlot.end.toISOString(),
             client_phone: formData.phone,
-            service: formData.service || null,
+            service_id: selectedService?.id || null, // Atualizado
+            professional_id: selectedProfessional?.id || null, // Atualizado
             notes: formData.notes,
             updated_at: new Date().toISOString()
           })
@@ -292,7 +335,8 @@ export default function PublicBooking() {
             client_name: formData.name,
             client_email: formData.email,
             client_phone: formData.phone,
-            service: formData.service || null,
+            service_id: selectedService?.id || null, // Atualizado
+            professional_id: selectedProfessional?.id || null, // Atualizado
             notes: formData.notes,
             start_time: selectedSlot.start.toISOString(),
             end_time: selectedSlot.end.toISOString(),
@@ -344,7 +388,7 @@ export default function PublicBooking() {
   if (error || !business) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-50">
-        <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md text-center border border-zinc-200">
+        <div className="bg-white p-10 rounded-xl shadow-xl max-w-md text-center border border-zinc-200">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-sans font-semibold mb-2 text-zinc-900">{error || 'Algo deu errado'}</h2>
           <p className="text-zinc-500">O link que você acessou pode estar incorreto ou o negócio não existe mais.</p>
@@ -379,9 +423,9 @@ export default function PublicBooking() {
             </div>
           )}
           {business.logo_url ? (
-            <img src={business.logo_url} alt={business.name} className="w-20 h-20 md:w-24 md:h-24 rounded-2xl mx-auto mb-4 md:mb-6 shadow-md object-cover" referrerPolicy="no-referrer" />
+            <img src={business.logo_url} alt={business.name} className="w-20 h-20 md:w-24 md:h-24 rounded-xl mx-auto mb-4 md:mb-6 shadow-md object-cover" referrerPolicy="no-referrer" />
           ) : (
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-xl shadow-primary/10">
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-xl shadow-primary/10">
               <CalendarIcon className="text-white w-8 h-8 md:w-10 md:h-10" />
             </div>
           )}
@@ -409,7 +453,7 @@ export default function PublicBooking() {
                 id="my-appointments"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-zinc-100"
+                className="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-zinc-100"
               >
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-sans font-semibold text-zinc-900">Seus Agendamentos</h2>
@@ -425,7 +469,7 @@ export default function PublicBooking() {
                 ) : userAppointments.length > 0 ? (
                   <div className="space-y-4">
                     {userAppointments.map((app) => (
-                      <div key={app.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-zinc-50 rounded-xl gap-4 border border-zinc-100">
+                      <div key={app.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-zinc-50 rounded-lg gap-4 border border-zinc-100">
                         <div className="flex items-center gap-4">
                           <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
                             <CalendarIcon className="w-5 h-5" />
@@ -440,7 +484,7 @@ export default function PublicBooking() {
                             onClick={() => handleRescheduleClick(app)}
                             className="flex-1 md:flex-none px-4 py-2 bg-white text-zinc-600 rounded-lg text-sm font-sans font-semibold hover:text-zinc-900 transition-colors border border-zinc-200 shadow-sm"
                           >
-                            Remarcar
+                            Agendar Novamente
                           </button>
                           <button
                             onClick={() => handleCancelAppointment(app.id)}
@@ -453,22 +497,22 @@ export default function PublicBooking() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 bg-zinc-50/50 rounded-xl border border-dashed border-zinc-200">
+                  <div className="text-center py-8 bg-zinc-50/50 rounded-lg border border-dashed border-zinc-200">
                     <p className="text-zinc-400 text-sm">Você ainda não possui agendamentos marcados.</p>
                   </div>
                 )}
               </motion.div>
 
               {reschedulingAppointment && (
-                <div className="bg-[var(--primary-color)] text-white p-4 rounded-2xl flex items-center justify-between">
+                <div className="bg-[var(--primary-color)] text-white p-4 rounded-xl flex items-center justify-between">
                   <p className="text-sm font-medium">
-                    Remarcando agendamento de {format(parseISO(reschedulingAppointment.start_time), "d/MM 'às' HH:mm")}
+                    Novo agendamento baseado em {format(parseISO(reschedulingAppointment.start_time), "d/MM 'às' HH:mm")}
                   </p>
                   <button
                     onClick={() => setReschedulingAppointment(null)}
                     className="text-xs font-sans font-semibold underline"
                   >
-                    Cancelar remarcação
+                    Cancelar
                   </button>
                 </div>
               )}
@@ -481,7 +525,7 @@ export default function PublicBooking() {
                 className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
               >
                 {/* Calendar Section */}
-                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-zinc-100">
+                <div className="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-zinc-100">
                   <div className="flex items-center justify-between mb-6 md:mb-8">
                     <h2 className="text-lg md:text-xl font-sans font-semibold text-zinc-900">Selecione o Dia</h2>
                     <div className="flex gap-2">
@@ -516,7 +560,7 @@ export default function PublicBooking() {
                           disabled={isPast}
                           onClick={() => setSelectedDate(date)}
                           className={cn(
-                            "aspect-square rounded-xl md:rounded-2xl flex flex-col items-center justify-center transition-all",
+                            "aspect-square rounded-lg md:rounded-xl flex flex-col items-center justify-center transition-all",
                             isSelected ? "bg-[var(--primary-color)] text-white shadow-lg scale-105" : "hover:bg-black/5",
                             isPast && "opacity-20 cursor-not-allowed"
                           )}
@@ -532,7 +576,7 @@ export default function PublicBooking() {
                 </div>
 
                 {/* Slots Section */}
-                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-zinc-100">
+                <div className="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-zinc-100">
                   <h2 className="text-lg md:text-xl font-sans font-semibold mb-6 md:mb-8 text-zinc-900">Horários Disponíveis</h2>
 
                   {loadingSlots ? (
@@ -546,7 +590,7 @@ export default function PublicBooking() {
                         <button
                           key={i}
                           onClick={() => handleSlotSelect(slot)}
-                          className="p-3 md:p-4 bg-zinc-50 rounded-xl text-center font-sans font-semibold hover:bg-primary hover:text-white transition-all group border border-zinc-100 shadow-sm hover:shadow-lg hover:shadow-primary/20"
+                          className="p-3 md:p-4 bg-zinc-50 rounded-lg text-center font-sans font-semibold hover:bg-primary hover:text-white transition-all group border border-zinc-100 shadow-sm hover:shadow-lg hover:shadow-primary/20"
                         >
                           <Clock className="w-4 h-4 mx-auto mb-1 md:mb-2 opacity-20 group-hover:opacity-100 transition-opacity" />
                           <span className="text-sm md:text-base">{format(slot.start, 'HH:mm')}</span>
@@ -566,7 +610,115 @@ export default function PublicBooking() {
             </div>
           )}
 
-          {step === 'form' && selectedSlot && (
+          {/* NOVO: Passo de Serviço */}
+          {step === 'service' && hasConfirmedAuth && (
+            <motion.div
+              key="service-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-xl mx-auto"
+            >
+              <div className="bg-white rounded-xl p-6 md:p-8 shadow-xl border border-zinc-100">
+                <h2 className="text-xl md:text-2xl font-display font-semibold text-zinc-900 mb-2">1. Escolha o serviço</h2>
+                <p className="text-zinc-500 mb-6 text-sm">Selecione o que você deseja realizar hoje.</p>
+
+                {services.length === 0 ? (
+                  <div className="text-center p-6 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+                    <AlertCircle className="w-8 h-8 text-zinc-400 mx-auto mb-2" />
+                    <p className="text-sm text-zinc-500">Nenhum serviço cadastrado no momento.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {services.map(service => (
+                      <button
+                        key={service.id}
+                        onClick={() => handleServiceSelect(service)}
+                        className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-200 hover:border-[var(--primary-color)] hover:shadow-md transition-all group text-left bg-white"
+                      >
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-zinc-900">{service.name}</h3>
+                          <div className="flex gap-3 mt-1">
+                            <span className="text-xs font-medium text-zinc-500 flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> {service.duration_minutes} min
+                            </span>
+                            {service.price !== null && (
+                              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                R$ {Number(service.price).toFixed(2).replace('.', ',')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[var(--primary-color)] transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* NOVO: Passo de Colaborador */}
+          {step === 'professional' && hasConfirmedAuth && selectedService && (
+            <motion.div
+              key="professional-step"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="max-w-xl mx-auto"
+            >
+              <div className="bg-white rounded-xl p-6 md:p-8 shadow-xl border border-zinc-100">
+                <button
+                  onClick={() => setStep('service')}
+                  className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6 text-sm font-medium"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Trocar serviço ({selectedService.name})
+                </button>
+
+                <h2 className="text-xl md:text-2xl font-display font-semibold text-zinc-900 mb-2">2. Escolha o profissional</h2>
+                <p className="text-zinc-500 mb-6 text-sm">Quem você deseja que realize o atendimento?</p>
+
+                <div className="space-y-3">
+                  {/* O "Qualquer profissional" pega o primeiro, ou podemos criar lógic a complexa, mas vamos obrigar escolha neste momento */}
+                  {professionals
+                    .filter(prof => profServicesData.some(ps => ps.professional_id === prof.id && ps.service_id === selectedService.id))
+                    .length === 0 ? (
+                    <div className="text-center p-6 bg-amber-50 rounded-xl border border-amber-100">
+                      <p className="text-sm text-amber-700">Nenhum profissional atende este serviço no momento.</p>
+                    </div>
+                  ) : (
+                    professionals
+                      .filter(prof => profServicesData.some(ps => ps.professional_id === prof.id && ps.service_id === selectedService.id))
+                      .map(prof => (
+                        <button
+                          key={prof.id}
+                          onClick={() => handleProfessionalSelect(prof)}
+                          className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-200 hover:border-[var(--primary-color)] hover:shadow-md transition-all group text-left bg-white"
+                        >
+                          <div className="flex items-center gap-4">
+                            {prof.avatar_url ? (
+                              <img src={prof.avatar_url} alt={prof.name} className="w-12 h-12 rounded-full object-cover bg-zinc-100" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center font-medium text-zinc-500 text-lg">
+                                {prof.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h3 className="font-semibold text-zinc-900">{prof.name}</h3>
+                              {prof.bio && <p className="text-xs text-zinc-500 mt-0.5 line-clamp-1">{prof.bio}</p>}
+                            </div>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[var(--primary-color)] transition-colors" />
+                        </button>
+                      ))
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'form' && selectedSlot && selectedService && selectedProfessional && (
             <motion.div
               key="form"
               initial={{ opacity: 0, x: 20 }}
@@ -574,7 +726,7 @@ export default function PublicBooking() {
               exit={{ opacity: 0, x: -20 }}
               className="max-w-xl mx-auto"
             >
-              <div className="bg-white rounded-2xl p-6 md:p-10 shadow-xl border border-zinc-100">
+              <div className="bg-white rounded-xl p-6 md:p-10 shadow-xl border border-zinc-100">
                 <button
                   onClick={() => setStep('date')}
                   className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6 md:mb-8 text-sm font-medium"
@@ -583,37 +735,22 @@ export default function PublicBooking() {
                   Alterar data ou horário
                 </button>
 
-                <div className="flex items-center gap-4 mb-8 md:mb-10 p-4 bg-zinc-50 rounded-xl border border-zinc-100">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                    <Clock className="w-5 h-5 md:w-6 md:h-6" />
+                <div className="flex border border-zinc-100 rounded-lg overflow-hidden mb-8 shadow-sm">
+                  <div className="bg-zinc-50 p-4 border-r border-zinc-100 flex-1 flex flex-col items-center justify-center text-center">
+                    <Scissors className="w-5 h-5 text-zinc-400 mb-1" />
+                    <p className="font-semibold text-zinc-900 text-sm whitespace-nowrap overflow-hidden text-ellipsis w-[100px]">{selectedService.name}</p>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">
-                      {reschedulingAppointment ? 'Novo Horário' : 'Horário Selecionado'}
-                    </p>
-                    <p className="text-sm md:text-lg font-semibold leading-tight text-zinc-900">
-                      {format(selectedSlot.start, "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                    </p>
+                  <div className="bg-zinc-50 p-4 border-r border-zinc-100 flex-1 flex flex-col items-center justify-center text-center">
+                    <User className="w-5 h-5 text-zinc-400 mb-1" />
+                    <p className="font-semibold text-zinc-900 text-sm truncate whitespace-nowrap overflow-hidden text-ellipsis w-[100px]">{selectedProfessional.name.split(' ')[0]}</p>
+                  </div>
+                  <div className="bg-[var(--primary-color)] text-white p-4 flex-1 flex flex-col items-center justify-center text-center">
+                    <Clock className="w-5 h-5 mb-1 opacity-80" />
+                    <p className="font-bold text-sm whitespace-nowrap">{format(selectedSlot.start, "dd/MM - HH:mm")}</p>
                   </div>
                 </div>
 
                 <form onSubmit={handleBooking} className="space-y-6">
-                  {business.services && business.services.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Serviço</label>
-                      <select
-                        required
-                        value={formData.service}
-                        onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                        className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 px-4 focus:ring-2 focus:ring-primary transition-all appearance-none text-zinc-900"
-                      >
-                        <option value="">Selecione um serviço</option>
-                        {business.services.map((service) => (
-                          <option key={service} value={service}>{service}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
 
                   <div className="space-y-2">
                     <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Seu Nome</label>
@@ -624,7 +761,7 @@ export default function PublicBooking() {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                        className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
                         placeholder="Nome completo"
                       />
                     </div>
@@ -639,7 +776,7 @@ export default function PublicBooking() {
                         required
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                        className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
                         placeholder="(00) 00000-0000"
                       />
                     </div>
@@ -650,7 +787,7 @@ export default function PublicBooking() {
                     <textarea
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 px-4 focus:ring-2 focus:ring-primary transition-all min-h-[100px] text-zinc-900"
+                      className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 px-4 focus:ring-2 focus:ring-primary transition-all min-h-[100px] text-zinc-900"
                       placeholder="Alguma informação adicional?"
                     />
                   </div>
@@ -658,7 +795,7 @@ export default function PublicBooking() {
                   <button
                     type="submit"
                     disabled={booking}
-                    className="w-full bg-primary text-white py-5 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                    className="w-full bg-primary text-white py-5 rounded-lg font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
                   >
                     {booking ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                       reschedulingAppointment ? 'Confirmar Novo Horário' : 'Confirmar Agendamento'
@@ -676,8 +813,8 @@ export default function PublicBooking() {
               animate={{ opacity: 1, scale: 1 }}
               className="max-w-md mx-auto text-center"
             >
-              <div className="bg-white rounded-2xl p-8 md:p-12 shadow-2xl border border-zinc-100">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-emerald-50 rounded-xl flex items-center justify-center mx-auto mb-6 md:mb-8">
+              <div className="bg-white rounded-xl p-8 md:p-12 shadow-2xl border border-zinc-100">
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-emerald-50 rounded-lg flex items-center justify-center mx-auto mb-6 md:mb-8">
                   <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12 text-emerald-500" />
                 </div>
                 <h2 className="text-2xl md:text-3xl font-display font-bold text-zinc-900 mb-4">
@@ -689,7 +826,7 @@ export default function PublicBooking() {
                     : `Seu agendamento para ${business.name} foi confirmado com sucesso.`
                   }
                 </p>
-                <div className="bg-zinc-50 p-6 rounded-xl mb-8 text-left border border-zinc-100">
+                <div className="bg-zinc-50 p-6 rounded-lg mb-8 text-left border border-zinc-100">
                   <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 mb-2">Resumo</p>
                   <p className="font-semibold text-sm md:text-base text-zinc-900">{format(selectedSlot!.start, "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
                   <p className="text-xl md:text-2xl font-display font-bold text-primary">{format(selectedSlot!.start, "HH:mm")}</p>

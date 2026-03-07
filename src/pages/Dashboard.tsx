@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Business, Appointment } from '../types';
@@ -45,6 +45,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [calendarFullscreen, setCalendarFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedStaff, setCopiedStaff] = useState(false);
   const [updatingAttendance, setUpdatingAttendance] = useState(false);
   const [attendanceFinalPrice, setAttendanceFinalPrice] = useState('');
   const navigate = useNavigate();
@@ -117,7 +118,7 @@ export default function Dashboard({ session }: { session: Session }) {
     })
     .slice(0, 10);
 
-  // Pr├│ximo agendamento ÔÇö corrigido: compara com agora menos 5 minutos de margem
+  // Próximo agendamento — corrigido: compara com agora menos 5 minutos de margem
   const now = new Date();
   now.setMinutes(now.getMinutes() - 5);
   const nextAppointment = appointments
@@ -129,6 +130,12 @@ export default function Dashboard({ session }: { session: Session }) {
     navigator.clipboard.writeText(`${window.location.origin}/b/${business.slug}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyStaffLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/staff/login`);
+    setCopiedStaff(true);
+    setTimeout(() => setCopiedStaff(false), 2000);
   };
 
   const handleLogout = async () => {
@@ -143,14 +150,14 @@ export default function Dashboard({ session }: { session: Session }) {
 
       if (attended) {
         if (!attendanceFinalPrice) {
-          alert('Por favor, informe o valor final cobrado pelo servi├ºo.');
+          alert('Por favor, informe o valor final cobrado pelo serviço.');
           setUpdatingAttendance(false);
           return;
         }
         // Normalize price
         const priceNum = parseFloat(attendanceFinalPrice.replace(',', '.'));
         if (isNaN(priceNum)) {
-          alert('Valor inv├ílido.');
+          alert('Valor inválido.');
           setUpdatingAttendance(false);
           return;
         }
@@ -174,10 +181,10 @@ export default function Dashboard({ session }: { session: Session }) {
         setSelectedAppointment({ ...selectedAppointment, ...updates });
       }
       setAttendanceFinalPrice('');
-      alert(attended ? 'Presen├ºa confirmada com sucesso!' : 'Falta registrada.');
+      alert(attended ? 'Presença confirmada com sucesso!' : 'Falta registrada.');
 
     } catch (error: any) {
-      alert('Erro ao atualizar presen├ºa: ' + error.message);
+      alert('Erro ao atualizar presença: ' + error.message);
     } finally {
       setUpdatingAttendance(false);
     }
@@ -204,13 +211,13 @@ export default function Dashboard({ session }: { session: Session }) {
           <div className="w-16 h-16 bg-primary/5 rounded-xl flex items-center justify-center mx-auto mb-6">
             <Plus className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-2xl font-sans font-semibold mb-4 text-zinc-900">Configure seu neg├│cio</h2>
-          <p className="text-zinc-500 mb-8 font-sans">Para come├ºar a receber agendamentos, precisamos de algumas informa├º├Áes b├ísicas sobre sua empresa.</p>
+          <h2 className="text-2xl font-sans font-semibold mb-4 text-zinc-900">Configure seu negócio</h2>
+          <p className="text-zinc-500 mb-8 font-sans">Para começar a receber agendamentos, precisamos de algumas informações básicas sobre sua empresa.</p>
           <Link
             to="/dashboard/settings"
             className="block w-full bg-primary text-white py-4 rounded-lg font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg text-center"
           >
-            Come├ºar Configura├º├úo
+            Começar Configuração
           </Link>
         </motion.div>
       </div>
@@ -224,7 +231,7 @@ export default function Dashboard({ session }: { session: Session }) {
     setCheckoutLoading(true);
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!currentSession) throw new Error('Sess├úo n├úo encontrada');
+      if (!currentSession) throw new Error('Sessão não encontrada');
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'token': currentSession.access_token },
@@ -239,7 +246,7 @@ export default function Dashboard({ session }: { session: Session }) {
     }
   };
 
-  // Calend├írio inline (shared between normal and fullscreen mode)
+  // Calendário inline (shared between normal and fullscreen mode)
   const CalendarView = () => (
     <div className="bg-white p-5 md:p-6 rounded-lg border border-zinc-200 shadow-sm">
       <div className="flex items-center justify-between mb-4">
@@ -311,26 +318,27 @@ export default function Dashboard({ session }: { session: Session }) {
         {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 md:mb-10">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold capitalize text-zinc-900">Ol├í, {business.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold capitalize text-zinc-900">Olá, {business.name}</h1>
             <p className="text-zinc-500 mt-1 text-sm capitalize">
               {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <a
-              href="/staff/login"
-              className="flex items-center justify-center gap-2 bg-zinc-900 text-white px-4 py-2.5 rounded-lg font-sans font-semibold hover:bg-black transition-all shadow-sm text-sm flex-1 sm:flex-none"
-            >
-              <Lock className="w-4 h-4" />
-              Link do Colaborador
-            </a>
-            {/* Botão "Copiar Link" ao lado */}
+            {/* Link da Agenda - copia o link público */}
             <button
               onClick={handleCopyLink}
               className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 rounded-lg border border-zinc-200 font-sans font-semibold text-zinc-900 hover:bg-zinc-50 transition-all shadow-sm text-sm flex-1 sm:flex-none"
             >
               {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copiado!' : 'Copiar Link'}
+              {copied ? 'Copiado!' : 'Link da Agenda'}
+            </button>
+            {/* Link do Colaborador - copia o link de login */}
+            <button
+              onClick={handleCopyStaffLink}
+              className="flex items-center justify-center gap-2 bg-zinc-900 text-white px-4 py-2.5 rounded-lg font-sans font-semibold hover:bg-black transition-all shadow-sm text-sm flex-1 sm:flex-none"
+            >
+              {copiedStaff ? <Check className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              {copiedStaff ? 'Copiado!' : 'Link do Colaborador'}
             </button>
           </div>
         </header>
@@ -346,7 +354,7 @@ export default function Dashboard({ session }: { session: Session }) {
             </div>
             <div>
               <h3 className="text-emerald-900 font-sans font-semibold">Pagamento processado!</h3>
-              <p className="text-emerald-700 text-sm">Sua assinatura est├í sendo ativada. Pode levar alguns segundos para atualizar.</p>
+              <p className="text-emerald-700 text-sm">Sua assinatura está sendo ativada. Pode levar alguns segundos para atualizar.</p>
             </div>
           </motion.div>
         )}
@@ -376,17 +384,17 @@ export default function Dashboard({ session }: { session: Session }) {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Card: Pr├│ximo Agendamento */}
+              {/* Card: Próximo Agendamento */}
               <div className="bg-white p-5 rounded-lg border border-zinc-200 shadow-sm">
                 <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center mb-3">
                   <Clock className="w-5 h-5 text-emerald-600" />
                 </div>
-                <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest">Pr├│ximo Agendamento</p>
+                <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest">Próximo Agendamento</p>
                 {nextAppointment ? (
                   <>
                     <h3 className="text-base font-display font-bold text-zinc-900 mt-1 truncate">{nextAppointment.client_name}</h3>
                     <p className="text-sm text-zinc-500 mt-0.5">
-                      {format(parseISO(nextAppointment.start_time), "dd/MM '├ás' HH:mm", { locale: ptBR })}
+                      {format(parseISO(nextAppointment.start_time), "dd/MM 'às' HH:mm", { locale: ptBR })}
                     </p>
                   </>
                 ) : (
@@ -394,7 +402,7 @@ export default function Dashboard({ session }: { session: Session }) {
                 )}
               </div>
 
-              {/* Card: Notifica├º├Áes (clic├ível, substitui Atividade Recente) */}
+              {/* Card: Notificações (clicável, substitui Atividade Recente) */}
               <button
                 onClick={() => setShowNotifications(true)}
                 className="bg-white p-5 rounded-lg border border-zinc-200 shadow-sm text-left hover:border-primary/30 hover:shadow-md transition-all group"
@@ -409,7 +417,7 @@ export default function Dashboard({ session }: { session: Session }) {
                     </span>
                   )}
                 </div>
-                <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest">Notifica├º├Áes</p>
+                <p className="text-zinc-400 text-[10px] font-sans font-medium uppercase tracking-widest">Notificações</p>
                 <h3 className="text-base font-display font-bold text-zinc-900 mt-1">
                   {notifications.length > 0
                     ? `${notifications.length} atividade${notifications.length > 1 ? 's' : ''}`
@@ -461,7 +469,7 @@ export default function Dashboard({ session }: { session: Session }) {
                               <>
                                 <span className="w-1 h-1 bg-zinc-200 rounded-full" />
                                 <span className="text-xs font-sans font-semibold text-primary uppercase tracking-wider">
-                                  {app.service?.name || 'Servi├ºo Padr├úo'}
+                                  {app.service?.name || 'Serviço Padrão'}
                                 </span>
                               </>
                             )}
@@ -475,7 +483,7 @@ export default function Dashboard({ session }: { session: Session }) {
                             )}
                             {app.attended === true && (
                               <span className="ml-2 flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">
-                                <CheckCircle2 className="w-3 h-3" /> Conclu├¡do
+                                <CheckCircle2 className="w-3 h-3" /> Concluído
                               </span>
                             )}
                             {app.attended === false && (
@@ -552,7 +560,7 @@ export default function Dashboard({ session }: { session: Session }) {
                           >
                             <div>
                               <h4 className="font-sans font-semibold text-zinc-900">{app.client_name}</h4>
-                              <p className="text-sm text-zinc-500">{format(parseISO(app.start_time), 'HH:mm')} ÔÇô {format(parseISO(app.end_time), 'HH:mm')}</p>
+                              <p className="text-sm text-zinc-500">{format(parseISO(app.start_time), 'HH:mm')} – {format(parseISO(app.end_time), 'HH:mm')}</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-zinc-300" />
                           </button>
@@ -588,7 +596,7 @@ export default function Dashboard({ session }: { session: Session }) {
                     <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
                       <Bell className="w-4 h-4 text-amber-600" />
                     </div>
-                    <h3 className="text-lg font-sans font-semibold text-zinc-900">Notifica├º├Áes</h3>
+                    <h3 className="text-lg font-sans font-semibold text-zinc-900">Notificações</h3>
                   </div>
                   <button onClick={() => setShowNotifications(false)} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
                     <X className="w-5 h-5 text-zinc-400" />
@@ -672,7 +680,7 @@ export default function Dashboard({ session }: { session: Session }) {
                           )}
                           {selectedAppointment.attended === true && (
                             <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-sans font-bold uppercase tracking-widest rounded-md flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Conclu├¡do
+                              <CheckCircle2 className="w-3 h-3" /> Concluído
                             </span>
                           )}
                           {selectedAppointment.attended === false && (
@@ -692,9 +700,9 @@ export default function Dashboard({ session }: { session: Session }) {
                     <div className="flex items-center gap-4 p-4 bg-zinc-50 rounded-lg">
                       <Clock className="w-5 h-5 text-zinc-400" />
                       <div>
-                        <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Data e Hor├írio</p>
+                        <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Data e Horário</p>
                         <p className="font-medium text-zinc-900">
-                          {format(parseISO(selectedAppointment.start_time), "EEEE, d 'de' MMMM '├ás' HH:mm", { locale: ptBR })}
+                          {format(parseISO(selectedAppointment.start_time), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                         </p>
                       </div>
                     </div>
@@ -716,12 +724,12 @@ export default function Dashboard({ session }: { session: Session }) {
                         </div>
                       </div>
 
-                      {/* Servi├ºo do Fluxo Novo */}
+                      {/* Serviço do Fluxo Novo */}
                       {selectedAppointment.service && (
                         <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg sm:col-span-2">
                           <Scissors className="w-5 h-5 text-zinc-400" />
                           <div className="flex-1">
-                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Servi├ºo Agendado</p>
+                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Serviço Agendado</p>
                             <div className="flex items-center justify-between">
                               <p className="font-medium text-zinc-900">{selectedAppointment.service?.name}</p>
                               {selectedAppointment.service?.price !== null && (
@@ -739,7 +747,7 @@ export default function Dashboard({ session }: { session: Session }) {
                         <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg sm:col-span-2">
                           <Users className="w-5 h-5 text-zinc-400" />
                           <div>
-                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Profissional Respons├ível</p>
+                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Profissional Responsável</p>
                             <p className="font-medium text-zinc-900">{selectedAppointment.professional?.name}</p>
                           </div>
                         </div>
@@ -749,18 +757,18 @@ export default function Dashboard({ session }: { session: Session }) {
                     <div className="p-4 border border-zinc-100 rounded-xl space-y-2">
                       <div className="flex items-center gap-2 text-zinc-400">
                         <FileText className="w-4 h-4" />
-                        <span className="text-[10px] font-sans font-medium uppercase tracking-widest">Observa├º├Áes</span>
+                        <span className="text-[10px] font-sans font-medium uppercase tracking-widest">Observações</span>
                       </div>
                       <p className="text-zinc-600 leading-relaxed italic text-sm">
-                        {selectedAppointment.notes || "Nenhuma observa├º├úo enviada pelo cliente."}
+                        {selectedAppointment.notes || "Nenhuma observação enviada pelo cliente."}
                       </p>
                     </div>
 
-                    {/* Fluxo de Confirma├º├úo de Presen├ºa e Valor Final */}
+                    {/* Fluxo de Confirmação de Presença e Valor Final */}
                     {parseISO(selectedAppointment.start_time) < new Date() && selectedAppointment.status !== 'cancelled' && (
                       <div className="mt-8 p-5 bg-zinc-50 border border-zinc-200 rounded-xl">
-                        <h4 className="font-sans font-bold text-zinc-900 mb-2">Finaliza├º├úo do Atendimento</h4>
-                        <p className="text-sm text-zinc-500 mb-4">O hor├írio deste agendamento j├í passou. Confirme se o cliente compareceu para alimentar os relat├│rios.</p>
+                        <h4 className="font-sans font-bold text-zinc-900 mb-2">Finalização do Atendimento</h4>
+                        <p className="text-sm text-zinc-500 mb-4">O horário deste agendamento já passou. Confirme se o cliente compareceu para alimentar os relatórios.</p>
 
                         {selectedAppointment.attended === null || selectedAppointment.attended === undefined ? (
                           <div className="space-y-4">
@@ -774,7 +782,7 @@ export default function Dashboard({ session }: { session: Session }) {
                                 onChange={(e) => setAttendanceFinalPrice(e.target.value)}
                                 className="w-full sm:w-1/2 bg-white border border-zinc-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                               />
-                              <p className="text-xs text-zinc-400 mt-1">Prencha este valor para confirmarmos a presen├ºa financeira.</p>
+                              <p className="text-xs text-zinc-400 mt-1">Prencha este valor para confirmarmos a presença financeira.</p>
                             </div>
 
                             <div className="flex gap-3">

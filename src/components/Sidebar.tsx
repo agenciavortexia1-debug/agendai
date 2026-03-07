@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar as CalendarIcon,
@@ -8,11 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Palette,
-  Briefcase,
   Users,
   BarChart3,
-  LayoutGrid,
-  Lock
+  LayoutGrid
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
@@ -58,7 +56,6 @@ export default function Sidebar() {
     { path: '/dashboard/management', icon: LayoutGrid, label: 'Gestão', screenKey: 'Equipe' },
     { path: '/dashboard/personalization', icon: Palette, label: 'Personalização', screenKey: 'Personalização' },
     { path: '/dashboard/settings', icon: Settings, label: 'Configurações', screenKey: 'Configurações' },
-    { path: '/staff/login', icon: Lock, label: 'Colaborador', screenKey: 'Agenda' },
   ];
 
   // Filter items based on role
@@ -94,7 +91,7 @@ export default function Sidebar() {
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || (location.pathname.startsWith(item.path) && item.path !== '/dashboard');
 
-            // Tratativa especial para o /dashboard n├úo marcar tudo que come├ºa com /dashboard
+            // Tratativa especial para o /dashboard não marcar tudo que começa com /dashboard
             const isExactDashboard = item.path === '/dashboard' && location.pathname === '/dashboard';
             const isNotDashboard = item.path !== '/dashboard' && location.pathname.startsWith(item.path);
 

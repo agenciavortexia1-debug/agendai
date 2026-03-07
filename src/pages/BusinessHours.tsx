@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { BusinessHour, Business } from '../types';
@@ -18,9 +18,9 @@ import Sidebar from '../components/Sidebar';
 import { cn } from '../lib/utils';
 
 const WEEKDAYS = [
-  'Domingo', 'Segunda', 'Ter├ºa', 'Quarta', 'Quinta', 'Sexta', 'S├íbado'
+  'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
 ];
-const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'S├íb'];
+const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 export default function BusinessHours({ session }: { session: Session }) {
   const [hours, setHours] = useState<BusinessHour[]>([]);
@@ -53,7 +53,7 @@ export default function BusinessHours({ session }: { session: Session }) {
             weekday: i,
             open_time: '09:00',
             close_time: '18:00',
-            is_closed: i === 0 || i === 6, // Dom e S├íb fechados por padr├úo
+            is_closed: i === 0 || i === 6, // Dom e Sáb fechados por padrão
             has_break: false,
             break_start: '12:00',
             break_end: '13:00',
@@ -83,7 +83,7 @@ export default function BusinessHours({ session }: { session: Session }) {
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error(err);
-      alert('Erro ao salvar hor├írios');
+      alert('Erro ao salvar horários');
     } finally {
       setSaving(false);
     }
@@ -126,7 +126,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                 <Clock className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-lg font-sans font-semibold">Hor├írios de Atendimento</h1>
+                <h1 className="text-lg font-sans font-semibold">Horários de Atendimento</h1>
                 <p className="text-zinc-400 text-xs">Defina sua disponibilidade e intervalos</p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                     hour.is_closed ? "bg-zinc-50/60" : "bg-white"
                   )}
                 >
-                  {/* Linha principal: dia + toggle + hor├írios */}
+                  {/* Linha principal: dia + toggle + horários */}
                   <div className="flex items-center gap-2">
                     {/* Toggle aberto/fechado */}
                     <button
@@ -150,7 +150,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                         "w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0",
                         hour.is_closed ? "bg-red-50 text-red-400 hover:bg-red-100" : "bg-emerald-50 text-emerald-500 hover:bg-emerald-100"
                       )}
-                      title={hour.is_closed ? 'Fechado ÔÇö clique para abrir' : 'Aberto ÔÇö clique para fechar'}
+                      title={hour.is_closed ? 'Fechado — clique para abrir' : 'Aberto — clique para fechar'}
                     >
                       {hour.is_closed ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
                     </button>
@@ -174,7 +174,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                           onChange={(e) => updateHour(index, 'open_time', e.target.value)}
                           className="bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-[100px]"
                         />
-                        <span className="text-zinc-300 text-xs">at├®</span>
+                        <span className="text-zinc-300 text-xs">até</span>
                         <input
                           type="time"
                           value={hour.close_time}
@@ -182,7 +182,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                           className="bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-[100px]"
                         />
 
-                        {/* Bot├úo intervalo */}
+                        {/* Botão intervalo */}
                         <button
                           onClick={() => updateHour(index, 'has_break', !hour.has_break)}
                           className={cn(
@@ -199,7 +199,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                     )}
                   </div>
 
-                  {/* Campos de intervalo (expans├¡vel) */}
+                  {/* Campos de intervalo (expansível) */}
                   <AnimatePresence>
                     {!hour.is_closed && hour.has_break && (
                       <motion.div
@@ -218,7 +218,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                             onChange={(e) => updateHour(index, 'break_start', e.target.value)}
                             className="bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all w-[100px]"
                           />
-                          <span className="text-zinc-300 text-xs">at├®</span>
+                          <span className="text-zinc-300 text-xs">até</span>
                           <input
                             type="time"
                             value={hour.break_end || '13:00'}
@@ -233,7 +233,7 @@ export default function BusinessHours({ session }: { session: Session }) {
               ))}
             </div>
 
-            {/* Bot├úo salvar */}
+            {/* Botão salvar */}
             <div className="p-3 md:p-5 border-t border-zinc-100">
               <button
                 onClick={handleSave}
@@ -249,7 +249,7 @@ export default function BusinessHours({ session }: { session: Session }) {
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
                   : saved
                     ? <><Check className="w-4 h-4" /> Salvo com sucesso!</>
-                    : <><Save className="w-4 h-4" /> Salvar Hor├írios</>
+                    : <><Save className="w-4 h-4" /> Salvar Horários</>
                 }
               </button>
             </div>

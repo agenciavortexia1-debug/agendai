@@ -1,4 +1,4 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
@@ -113,7 +113,7 @@ export default function App() {
         {/* Staff Login */}
         <Route path="/staff/login" element={<StaffLogin />} />
 
-        {/* Management (Gestão unificada) */}
+        {/* Management */}
         <Route
           path="/dashboard/management"
           element={session ? <Management session={session} /> : <Navigate to="/auth" />}
