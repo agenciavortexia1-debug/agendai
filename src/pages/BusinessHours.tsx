@@ -1,30 +1,33 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { BusinessHour, Business } from '../types';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   Save,
   Loader2,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { cn } from '../lib/utils';
 
 const WEEKDAYS = [
-  'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
+  'Domingo', 'Segunda', 'Ter├ºa', 'Quarta', 'Quinta', 'Sexta', 'S├íbado'
 ];
+const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'S├íb'];
 
 export default function BusinessHours({ session }: { session: Session }) {
   const [hours, setHours] = useState<BusinessHour[]>([]);
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const navigate = useNavigate();
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -45,13 +48,15 @@ export default function BusinessHours({ session }: { session: Session }) {
         if (hoursData && hoursData.length > 0) {
           setHours(hoursData);
         } else {
-          // Initialize default hours
           const defaultHours = WEEKDAYS.map((_, i) => ({
             business_id: businessData.id,
             weekday: i,
             open_time: '09:00',
             close_time: '18:00',
-            is_closed: i === 0 || i === 6 // Closed on weekends by default
+            is_closed: i === 0 || i === 6, // Dom e S├íb fechados por padr├úo
+            has_break: false,
+            break_start: '12:00',
+            break_end: '13:00',
           })) as BusinessHour[];
           setHours(defaultHours);
         }
@@ -63,7 +68,9 @@ export default function BusinessHours({ session }: { session: Session }) {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaved(false);
     try {
+      // Optimistic: atualiza UI imediatamente
       const { error } = await supabase
         .from('business_hours')
         .upsert(
@@ -72,25 +79,28 @@ export default function BusinessHours({ session }: { session: Session }) {
         );
 
       if (error) throw error;
-      navigate('/dashboard');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       console.error(err);
-      alert('Erro ao salvar horários');
+      alert('Erro ao salvar hor├írios');
     } finally {
       setSaving(false);
     }
   };
 
   const updateHour = (index: number, field: keyof BusinessHour, value: any) => {
-    const newHours = [...hours];
-    newHours[index] = { ...newHours[index], [field]: value };
-    setHours(newHours);
+    setHours(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5A5A40]"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -98,97 +108,151 @@ export default function BusinessHours({ session }: { session: Session }) {
   return (
     <div className="min-h-screen flex flex-col md:flex-row transition-all duration-300">
       <Sidebar />
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto pb-24 md:pb-10">
+      <main className="flex-1 p-3 md:p-10 overflow-y-auto pb-20 md:pb-8 bg-zinc-50/50">
         <div className="max-w-2xl mx-auto">
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-black/40 hover:text-black transition-colors mb-4 md:mb-6">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-4 text-sm font-medium">
             <ArrowLeft className="w-4 h-4" />
-            Voltar para Dashboard
+            Voltar
           </Link>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-zinc-200"
+            className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden"
           >
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Clock className="w-5 h-5 text-primary" />
+            {/* Header compacto */}
+            <div className="flex items-center gap-3 p-4 md:p-6 border-b border-zinc-100">
+              <div className="w-9 h-9 bg-primary/5 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-sans font-semibold">Horários de Atendimento</h1>
-                <p className="text-zinc-400 text-xs">Defina quando você está disponível para receber clientes</p>
+                <h1 className="text-lg font-sans font-semibold">Hor├írios de Atendimento</h1>
+                <p className="text-zinc-400 text-xs">Defina sua disponibilidade e intervalos</p>
               </div>
             </div>
 
-            <div className="space-y-2 mb-6">
+            {/* Lista de dias */}
+            <div className="divide-y divide-zinc-50">
               {hours.map((hour, index) => (
-                <div key={index} className={cn(
-                  "flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all gap-2 sm:gap-0",
-                  hour.is_closed ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-200 shadow-sm"
-                )}>
-                  <div className="flex items-center gap-3 w-full sm:w-32">
+                <div
+                  key={index}
+                  className={cn(
+                    "p-3 md:p-4 transition-colors",
+                    hour.is_closed ? "bg-zinc-50/60" : "bg-white"
+                  )}
+                >
+                  {/* Linha principal: dia + toggle + hor├írios */}
+                  <div className="flex items-center gap-2">
+                    {/* Toggle aberto/fechado */}
                     <button
                       onClick={() => updateHour(index, 'is_closed', !hour.is_closed)}
                       className={cn(
                         "w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0",
-                        hour.is_closed ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-500"
+                        hour.is_closed ? "bg-red-50 text-red-400 hover:bg-red-100" : "bg-emerald-50 text-emerald-500 hover:bg-emerald-100"
                       )}
+                      title={hour.is_closed ? 'Fechado ÔÇö clique para abrir' : 'Aberto ÔÇö clique para fechar'}
                     >
-                      {hour.is_closed ? <XCircle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                      {hour.is_closed ? <XCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
                     </button>
-                    <span className="font-sans font-semibold text-sm">{WEEKDAYS[hour.weekday]}</span>
-                    <div className="sm:hidden ml-auto">
-                      <span className={cn(
-                        "text-[9px] font-sans font-medium uppercase tracking-widest px-2 py-0.5 rounded-full",
-                        hour.is_closed ? "bg-red-100 text-red-500" : "bg-emerald-100 text-emerald-500"
-                      )}>
-                        {hour.is_closed ? 'Fechado' : 'Aberto'}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <span className="text-[9px] font-sans font-medium text-zinc-300 uppercase w-8 sm:w-auto">Abre</span>
-                      <input
-                        type="time"
-                        disabled={hour.is_closed}
-                        value={hour.open_time}
-                        onChange={(e) => updateHour(index, 'open_time', e.target.value)}
-                        className="flex-1 sm:flex-none bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary disabled:opacity-50"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <span className="text-[9px] font-sans font-medium text-zinc-300 uppercase w-8 sm:w-auto">Fecha</span>
-                      <input
-                        type="time"
-                        disabled={hour.is_closed}
-                        value={hour.close_time}
-                        onChange={(e) => updateHour(index, 'close_time', e.target.value)}
-                        className="flex-1 sm:flex-none bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="hidden sm:block w-20 text-right">
+                    {/* Nome do dia */}
                     <span className={cn(
-                      "text-[10px] font-sans font-medium uppercase tracking-widest",
-                      hour.is_closed ? "text-red-400" : "text-emerald-500"
+                      "font-sans font-semibold text-sm w-8 md:w-20 text-left flex-shrink-0",
+                      hour.is_closed ? "text-zinc-400" : "text-zinc-800"
                     )}>
-                      {hour.is_closed ? 'Fechado' : 'Aberto'}
+                      <span className="md:hidden">{WEEKDAYS_SHORT[hour.weekday]}</span>
+                      <span className="hidden md:inline">{WEEKDAYS[hour.weekday]}</span>
                     </span>
+
+                    {hour.is_closed ? (
+                      <span className="text-xs text-zinc-400 italic ml-1">Fechado</span>
+                    ) : (
+                      <div className="flex items-center gap-1.5 flex-wrap flex-1">
+                        <input
+                          type="time"
+                          value={hour.open_time}
+                          onChange={(e) => updateHour(index, 'open_time', e.target.value)}
+                          className="bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-[100px]"
+                        />
+                        <span className="text-zinc-300 text-xs">at├®</span>
+                        <input
+                          type="time"
+                          value={hour.close_time}
+                          onChange={(e) => updateHour(index, 'close_time', e.target.value)}
+                          className="bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-[100px]"
+                        />
+
+                        {/* Bot├úo intervalo */}
+                        <button
+                          onClick={() => updateHour(index, 'has_break', !hour.has_break)}
+                          className={cn(
+                            "ml-auto flex items-center gap-1 text-[10px] font-sans font-medium uppercase tracking-wider px-2 py-1.5 rounded-lg transition-all",
+                            hour.has_break
+                              ? "bg-amber-50 text-amber-600 border border-amber-200"
+                              : "bg-zinc-50 text-zinc-400 border border-zinc-200 hover:border-amber-200 hover:text-amber-500"
+                          )}
+                        >
+                          <ChevronDown className={cn("w-3 h-3 transition-transform", hour.has_break && "rotate-180")} />
+                          Intervalo
+                        </button>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Campos de intervalo (expans├¡vel) */}
+                  <AnimatePresence>
+                    {!hour.is_closed && hour.has_break && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="flex items-center gap-2 mt-2.5 pl-10 md:pl-[116px]">
+                          <div className="w-1 h-6 bg-amber-200 rounded-full flex-shrink-0" />
+                          <span className="text-[10px] font-sans font-medium text-amber-600 uppercase tracking-wider w-14 flex-shrink-0">Intervalo</span>
+                          <input
+                            type="time"
+                            value={hour.break_start || '12:00'}
+                            onChange={(e) => updateHour(index, 'break_start', e.target.value)}
+                            className="bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all w-[100px]"
+                          />
+                          <span className="text-zinc-300 text-xs">at├®</span>
+                          <input
+                            type="time"
+                            value={hour.break_end || '13:00'}
+                            onChange={(e) => updateHour(index, 'break_end', e.target.value)}
+                            className="bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all w-[100px]"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
 
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full bg-primary text-white py-4 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Salvar Horários</>}
-            </button>
+            {/* Bot├úo salvar */}
+            <div className="p-3 md:p-5 border-t border-zinc-100">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className={cn(
+                  "w-full py-3 rounded-lg font-sans font-semibold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-70",
+                  saved
+                    ? "bg-emerald-500 text-white"
+                    : "bg-primary text-white hover:bg-zinc-800 shadow-md"
+                )}
+              >
+                {saving
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
+                  : saved
+                    ? <><Check className="w-4 h-4" /> Salvo com sucesso!</>
+                    : <><Save className="w-4 h-4" /> Salvar Hor├írios</>
+                }
+              </button>
+            </div>
           </motion.div>
         </div>
       </main>
