@@ -415,28 +415,6 @@ export default function Management({ session }: { session: any }) {
                                                 placeholder="Nome do colaborador"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Cargo</label>
-                                                <select
-                                                    value={formData.role}
-                                                    onChange={e => setFormData({ ...formData, role: e.target.value as any })}
-                                                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-zinc-900 outline-none"
-                                                >
-                                                    <option value="employee">Funcionário</option>
-                                                    <option value="owner">Dono/Admin</option>
-                                                </select>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">WhatsApp</label>
-                                                <input
-                                                    type="tel"
-                                                    value={formData.phone}
-                                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-zinc-900 outline-none"
-                                                />
-                                            </div>
-                                        </div>
 
                                         {/* Services Selection */}
                                         <div className="space-y-3 pt-4 border-t border-zinc-100">
@@ -483,21 +461,12 @@ export default function Management({ session }: { session: any }) {
                                             className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-zinc-900"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Preço (R$)</label>
-                                            <input
-                                                type="number" step="0.01" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 outline-none"
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Duração (minutos)</label>
-                                            <input
-                                                type="number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 outline-none"
-                                            />
-                                        </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Duração (minutos)</label>
+                                        <input
+                                            type="number" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 outline-none focus:ring-2 focus:ring-zinc-900"
+                                        />
                                     </div>
                                 </div>
                             )}
