@@ -52,7 +52,7 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
   const navigate = useNavigate();
 
   const loadAppointments = useCallback(async (businessId: string) => {
-    const { data } = await supabase
+    let query = supabase
       .from('appointments')
       .select(`
         *,
@@ -61,8 +61,14 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
       `)
       .eq('business_id', businessId)
       .order('start_time', { ascending: true });
+
+    if (staffSession && staffSession.role !== 'owner') {
+      query = query.eq('professional_id', staffSession.id);
+    }
+
+    const { data } = await query;
     if (data) setAppointments(data);
-  }, []);
+  }, [staffSession]);
 
   useEffect(() => {
     let channel: any;
@@ -121,10 +127,7 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
   const isEmployee = staffSession && staffSession.role !== 'owner';
 
   const filteredAppointments = appointments.filter(app => {
-    const isSame = isSameDay(parseISO(app.start_time), selectedDate) && app.status !== 'cancelled';
-    if (!isSame) return false;
-    if (isEmployee) return app.professional_id === staffSession.id;
-    return true;
+    return isSameDay(parseISO(app.start_time), selectedDate) && app.status !== 'cancelled';
   });
 
   const notifications = [...appointments]
@@ -142,7 +145,7 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
   const now = new Date();
   now.setMinutes(now.getMinutes() - 5);
   const nextAppointment = appointments
-    .filter(app => app.status !== 'cancelled' && parseISO(app.start_time) >= now && (!isEmployee || app.professional_id === staffSession.id))
+    .filter(app => app.status !== 'cancelled' && parseISO(app.start_time) >= now)
     .sort((a, b) => parseISO(a.start_time).getTime() - parseISO(b.start_time).getTime())[0];
 
   const handleCopyLink = () => {
