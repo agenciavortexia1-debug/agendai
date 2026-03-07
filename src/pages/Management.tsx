@@ -135,10 +135,12 @@ export default function Management({ session }: { session: any }) {
 
                 let profId;
                 if (editingItem) {
-                    await supabase.from('professionals').update(payload).eq('id', editingItem.id);
+                    const { error } = await supabase.from('professionals').update(payload).eq('id', editingItem.id);
+                    if (error) throw error;
                     profId = editingItem.id;
                 } else {
-                    const { data } = await supabase.from('professionals').insert([payload]).select().single();
+                    const { data, error } = await supabase.from('professionals').insert([payload]).select().single();
+                    if (error) throw error;
                     profId = data?.id;
                 }
 
@@ -159,9 +161,11 @@ export default function Management({ session }: { session: any }) {
                     price: parseFloat(formData.email) || 0 // Using email field temp for price
                 };
                 if (editingItem) {
-                    await supabase.from('services').update(payload).eq('id', editingItem.id);
+                    const { error } = await supabase.from('services').update(payload).eq('id', editingItem.id);
+                    if (error) throw error;
                 } else {
-                    await supabase.from('services').insert([payload]);
+                    const { error } = await supabase.from('services').insert([payload]);
+                    if (error) throw error;
                 }
             }
 
@@ -270,6 +274,8 @@ export default function Management({ session }: { session: any }) {
                                                     role: prof.role as any,
                                                     avatar_url: prof.avatar_url || '',
                                                     access_screens: prof.access_screens || ['agenda'],
+                                                    login_user: prof.login_user || '',
+                                                    login_pass: prof.login_pass || '',
                                                     selectedServices: profServicesData.filter(ps => ps.professional_id === prof.id).map(ps => ps.service_id)
                                                 });
                                                 setIsModalOpen(true);
@@ -349,9 +355,14 @@ export default function Management({ session }: { session: any }) {
                                             setFormData({
                                                 ...formData,
                                                 name: prof.name,
+                                                email: prof.email || '',
+                                                phone: prof.phone || '',
+                                                role: prof.role as any,
+                                                avatar_url: prof.avatar_url || '',
                                                 login_user: prof.login_user || '',
                                                 login_pass: prof.login_pass || '',
-                                                access_screens: prof.access_screens || ['agenda']
+                                                access_screens: prof.access_screens || ['agenda'],
+                                                selectedServices: profServicesData.filter(ps => ps.professional_id === prof.id).map(ps => ps.service_id)
                                             });
                                             setIsModalOpen(true);
                                         }}
