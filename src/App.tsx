@@ -22,9 +22,18 @@ import StaffLogin from './pages/StaffLogin';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [staffSession, setStaffSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const localStaff = localStorage.getItem('staff_session');
+    if (localStaff) {
+      try {
+        setStaffSession(JSON.parse(localStaff));
+      } catch (e) {
+        console.error('Error parsing staff session', e);
+      }
+    }
     supabase.auth.getSession()
       .then(({ data: { session } }) => {
         setSession(session);
@@ -80,7 +89,7 @@ export default function App() {
         {/* Protected Dashboard Routes */}
         <Route
           path="/dashboard"
-          element={session ? <Dashboard session={session} /> : <Navigate to="/auth" />}
+          element={(session || staffSession) ? <Dashboard session={session} staffSession={staffSession} /> : <Navigate to="/auth" />}
         />
         <Route
           path="/dashboard/analytics"

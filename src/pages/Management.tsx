@@ -128,7 +128,7 @@ export default function Management({ session }: { session: any }) {
                     phone: formData.phone || null,
                     role: formData.role,
                     avatar_url: formData.avatar_url,
-                    access_screens: formData.access_screens,
+                    access_screens: ['agenda'], // Fixado para colaboradores
                     login_user: formData.login_user || null,
                     login_pass: formData.login_pass || null
                 };
@@ -306,7 +306,12 @@ export default function Management({ session }: { session: any }) {
                                         <button
                                             onClick={() => {
                                                 setEditingItem(svc);
-                                                setFormData({ ...formData, name: svc.name, phone: svc.duration_minutes.toString(), email: svc.price.toString() });
+                                                setFormData({
+                                                    ...formData,
+                                                    name: svc.name,
+                                                    phone: svc.duration_minutes?.toString() || '30',
+                                                    email: svc.price?.toString() || '0'
+                                                });
                                                 setIsModalOpen(true);
                                             }}
                                             className="flex-1 py-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-lg text-xs font-bold transition-all"
@@ -524,40 +529,13 @@ export default function Management({ session }: { session: any }) {
                                             />
                                         </div>
                                     </div>
-                                    <div className="space-y-3 pt-4 border-t border-zinc-100">
-                                        <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Telas Habilitadas</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {AVAILABLE_SCREENS.map(scr => (
-                                                <label
-                                                    key={scr.id}
-                                                    className={cn(
-                                                        "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all",
-                                                        formData.access_screens.includes(scr.id) ? "bg-indigo-50 border-indigo-200" : "bg-zinc-50 border-zinc-200"
-                                                    )}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        className="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
-                                                        checked={formData.access_screens.includes(scr.id)}
-                                                        onChange={() => {
-                                                            const news = formData.access_screens.includes(scr.id)
-                                                                ? formData.access_screens.filter(i => i !== scr.id)
-                                                                : [...formData.access_screens, scr.id];
-                                                            setFormData({ ...formData, access_screens: news });
-                                                        }}
-                                                    />
-                                                    <span className="text-xs font-semibold text-zinc-700">{scr.label}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
                                 </div>
                             )}
 
-                            <div className="pt-6 sticky bottom-0 bg-white">
+                            <div className="pt-6 sticky bottom-0 bg-white z-10">
                                 <button
                                     type="submit"
-                                    className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-black transition-all active:scale-[0.98]"
+                                    className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-black transition-all"
                                 >
                                     Salvar Informações
                                 </button>

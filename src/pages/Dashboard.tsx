@@ -34,7 +34,7 @@ import { ptBR } from 'date-fns/locale';
 import Sidebar from '../components/Sidebar';
 import { cn } from '../lib/utils';
 
-export default function Dashboard({ session }: { session: Session }) {
+export default function Dashboard({ session, staffSession }: { session?: any; staffSession?: any }) {
   const [business, setBusiness] = useState<Business | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -48,6 +48,7 @@ export default function Dashboard({ session }: { session: Session }) {
   const [copiedStaff, setCopiedStaff] = useState(false);
   const [updatingAttendance, setUpdatingAttendance] = useState(false);
   const [attendanceFinalPrice, setAttendanceFinalPrice] = useState('');
+  const [lastNotificationId, setLastNotificationId] = useState<string | null>(localStorage.getItem('lastNotificationId_agendai'));
   const navigate = useNavigate();
 
   const loadAppointments = useCallback(async (businessId: string) => {
@@ -69,17 +70,19 @@ export default function Dashboard({ session }: { session: Session }) {
     async function loadData() {
       try {
         setLoading(true);
-        const { data: businessData, error: businessError } = await supabase
-          .from('businesses')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
+        let bData = null;
 
-        if (businessError) throw businessError;
+        if (staffSession) {
+          const { data, error } = await supabase.from('businesses').select('*').eq('id', staffSession.business_id).single();
+          if (!error && data) bData = data;
+        } else if (session) {
+          const { data, error } = await supabase.from('businesses').select('*').eq('user_id', session.user.id).single();
+          if (!error && data) bData = data;
+        }
 
-        if (businessData) {
-          setBusiness(businessData);
-          await loadAppointments(businessData.id);
+        if (bData) {
+          setBusiness(bData);
+          await loadAppointments(bData.id);
 
           channel = supabase
             .channel('appointments_changes')
@@ -89,9 +92,9 @@ export default function Dashboard({ session }: { session: Session }) {
                 event: '*',
                 schema: 'public',
                 table: 'appointments',
-                filter: `business_id=eq.${businessData.id}`
+                filter: `business_id=eq.${bData.id}`
               },
-              () => loadAppointments(businessData.id)
+              () => loadAppointments(bData.id)
             )
             .subscribe();
         }
@@ -104,11 +107,16 @@ export default function Dashboard({ session }: { session: Session }) {
 
     loadData();
     return () => { if (channel) supabase.removeChannel(channel); };
-  }, [session, loadAppointments]);
+  }, [session, staffSession, loadAppointments]);
 
-  const filteredAppointments = appointments.filter(app =>
-    isSameDay(parseISO(app.start_time), selectedDate) && app.status !== 'cancelled'
-  );
+  const isEmployee = staffSession && staffSession.role !== 'owner';
+
+  const filteredAppointments = appointments.filter(app => {
+    const isSame = isSameDay(parseISO(app.start_time), selectedDate) && app.status !== 'cancelled';
+    if (!isSame) return false;
+    if (isEmployee) return app.professional_id === staffSession.id;
+    return true;
+  });
 
   const notifications = [...appointments]
     .sort((a, b) => {
@@ -118,11 +126,14 @@ export default function Dashboard({ session }: { session: Session }) {
     })
     .slice(0, 10);
 
+  const latestNotification = notifications[0];
+  const hasNewNotifications = latestNotification && latestNotification.id !== lastNotificationId;
+
   // Próximo agendamento — corrigido: compara com agora menos 5 minutos de margem
   const now = new Date();
   now.setMinutes(now.getMinutes() - 5);
   const nextAppointment = appointments
-    .filter(app => app.status !== 'cancelled' && parseISO(app.start_time) >= now)
+    .filter(app => app.status !== 'cancelled' && parseISO(app.start_time) >= now && (!isEmployee || app.professional_id === staffSession.id))
     .sort((a, b) => parseISO(a.start_time).getTime() - parseISO(b.start_time).getTime())[0];
 
   const handleCopyLink = () => {
@@ -404,7 +415,13 @@ export default function Dashboard({ session }: { session: Session }) {
 
               {/* Card: Notificações (clicável, substitui Atividade Recente) */}
               <button
-                onClick={() => setShowNotifications(true)}
+                onClick={() => {
+                  setShowNotifications(true);
+                  if (latestNotification) {
+                    setLastNotificationId(latestNotification.id);
+                    localStorage.setItem('lastNotificationId_agendai', latestNotification.id);
+                  }
+                }}
                 className="bg-white p-5 rounded-lg border border-zinc-200 shadow-sm text-left hover:border-primary/30 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -412,7 +429,10 @@ export default function Dashboard({ session }: { session: Session }) {
                     <Bell className="w-5 h-5 text-amber-600" />
                   </div>
                   {notifications.length > 0 && (
-                    <span className="w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center animate-pulse">
+                    <span className={cn(
+                      "w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center",
+                      hasNewNotifications && "animate-pulse"
+                    )}>
                       {notifications.length > 9 ? '9+' : notifications.length}
                     </span>
                   )}

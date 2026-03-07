@@ -24,6 +24,15 @@ export default function Sidebar() {
 
   useEffect(() => {
     async function loadUser() {
+      const staffLocal = localStorage.getItem('staff_session');
+      if (staffLocal) {
+        try {
+          const parsed = JSON.parse(staffLocal);
+          setCurrentUser(parsed);
+          return;
+        } catch (e) { }
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
@@ -45,6 +54,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = async () => {
+    localStorage.removeItem('staff_session');
     await supabase.auth.signOut();
     navigate('/');
   };
@@ -62,11 +72,8 @@ export default function Sidebar() {
   const navItems = allNavItems.filter(item => {
     if (!currentUser || currentUser.role === 'owner') return true;
 
-    // Default allowed screen for all
-    if (item.screenKey === 'Agenda') return true;
-
-    // Check if employee has access to this screen
-    return currentUser.access_screens?.includes(item.screenKey);
+    // Employees ONLY see Agenda now
+    return item.screenKey === 'Agenda';
   });
 
   return (
