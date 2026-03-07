@@ -12,7 +12,8 @@ import {
     Clock,
     Calendar as CalendarIcon,
     Award,
-    Scissors
+    Scissors,
+    X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, parseISO, subDays, isWithinInterval, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
@@ -474,7 +475,7 @@ export default function Analytics({ session }: { session: Session }) {
                                 onClick={() => setShowRevenueDetail(false)}
                                 className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
                             >
-                                <Users className="w-5 h-5 text-zinc-400 rotate-45" /> {/* Usando Users como X improvisado ou importar X */}
+                                <X className="w-5 h-5 text-zinc-400" />
                                 <span className="sr-only">Fechar</span>
                             </button>
                         </div>
