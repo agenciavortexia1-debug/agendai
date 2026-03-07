@@ -127,7 +127,9 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
   const isEmployee = staffSession && staffSession.role !== 'owner';
 
   const filteredAppointments = appointments.filter(app => {
-    return isSameDay(parseISO(app.start_time), selectedDate) && app.status !== 'cancelled';
+    const appDateStr = app.start_time.split('T')[0];
+    const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+    return appDateStr === selectedDateStr && app.status !== 'cancelled';
   });
 
   const notifications = [...appointments]
@@ -313,7 +315,8 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
           start: startOfMonth(currentMonth),
           end: endOfMonth(currentMonth)
         }).map((day, i) => {
-          const hasApp = appointments.some(app => isSameDay(parseISO(app.start_time), day) && app.status !== 'cancelled');
+          const dayStr = format(day, 'yyyy-MM-dd');
+          const hasApp = appointments.some(app => app.start_time.split('T')[0] === dayStr && app.status !== 'cancelled');
           const isSelected = isSameDay(day, selectedDate);
           const isToday = isSameDay(day, new Date());
           return (

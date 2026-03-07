@@ -54,9 +54,10 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = async () => {
+    const isStaff = currentUser && currentUser.role !== 'owner';
     localStorage.removeItem('staff_session');
     await supabase.auth.signOut();
-    navigate('/');
+    navigate(isStaff ? '/staff/login' : '/');
   };
 
   const allNavItems = [
