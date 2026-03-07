@@ -11,25 +11,22 @@ export default function CheckoutPage() {
     useEffect(() => {
         const startCheckout = async () => {
             try {
-                // Verificar se já tem sessão ativa
+                // Verificar se ja tem sessao ativa
                 const { data: { session } } = await supabase.auth.getSession();
-
-                if (!session) {
-                    // Se não estiver logado, salvar intenção e redirecionar para login
-                    sessionStorage.setItem('redirect_after_login', '/checkout');
-                    navigate('/auth');
-                    return;
-                }
 
                 setStatus('redirecting');
 
-                // Chamar a API de checkout do Stripe
+                // Chamar a API - com token se logado, sem token se usuario novo
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                };
+                if (session?.access_token) {
+                    headers['token'] = session.access_token;
+                }
+
                 const response = await fetch('/api/create-checkout-session', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'token': session.access_token,
-                    },
+                    headers,
                 });
 
                 const data = await response.json();
@@ -38,7 +35,7 @@ export default function CheckoutPage() {
                 if (data?.url) {
                     window.location.href = data.url;
                 } else {
-                    throw new Error('Link de pagamento não recebido.');
+                    throw new Error('Link de pagamento nao recebido.');
                 }
             } catch (err: any) {
                 setStatus('error');
@@ -51,8 +48,8 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
-            <div className="bg-white rounded-2xl p-12 shadow-xl border border-zinc-100 text-center max-w-md w-full">
-                <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
+            <div className="bg-white rounded-xl p-12 shadow-xl border border-zinc-100 text-center max-w-md w-full">
+                <div className="w-14 h-14 bg-primary rounded-lg flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
                     <Calendar className="text-white w-7 h-7" />
                 </div>
 
@@ -78,7 +75,7 @@ export default function CheckoutPage() {
                         <p className="text-zinc-500 text-sm mb-6">{errorMsg}</p>
                         <button
                             onClick={() => navigate('/')}
-                            className="bg-primary text-white px-6 py-3 rounded-xl font-sans font-semibold hover:bg-zinc-800 transition-all"
+                            className="bg-primary text-white px-6 py-3 rounded-lg font-sans font-semibold hover:bg-zinc-800 transition-all"
                         >
                             Voltar ao início
                         </button>
