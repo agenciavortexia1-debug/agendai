@@ -38,7 +38,7 @@ export default function StaffLogin() {
                 access_screens: data.access_screens || ['agenda']
             }));
 
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
         } catch (err: any) {
             setError(err.message);
         } finally {

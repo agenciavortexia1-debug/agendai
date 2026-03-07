@@ -345,7 +345,9 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
         {/* Header */}
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 md:mb-10">
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold capitalize text-zinc-900">Olá, {business.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold capitalize text-zinc-900">
+              Olá, {isEmployee ? staffSession?.name?.split(' ')[0] : business.name}
+            </h1>
             <p className="text-zinc-500 mt-1 text-sm capitalize">
               {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
