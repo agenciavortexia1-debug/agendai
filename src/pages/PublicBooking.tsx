@@ -16,7 +16,10 @@ import {
   AlertCircle,
   Scissors,
   MapPin,
-  Info
+  Info,
+  Upload,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import {
   format,
@@ -59,6 +62,7 @@ export default function PublicBooking() {
   const [loadingUserAppointments, setLoadingUserAppointments] = useState(false);
   const [reschedulingAppointment, setReschedulingAppointment] = useState<Appointment | null>(null);
   const [hasConfirmedAuth, setHasConfirmedAuth] = useState(false);
+  const [referenceFile, setReferenceFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -311,6 +315,25 @@ export default function PublicBooking() {
 
     setBooking(true);
     try {
+      let referenceImageUrl: string | null = null;
+      if (referenceFile) {
+        const fileExt = referenceFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${business.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('references')
+          .upload(filePath, referenceFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('references')
+          .getPublicUrl(filePath);
+
+        referenceImageUrl = publicUrl;
+      }
+
       // Update user metadata with phone
       await supabase.auth.updateUser({
         data: { phone: formData.phone }
@@ -330,6 +353,7 @@ export default function PublicBooking() {
             notes: formData.notes,
             address: formData.address || null,
             reference: formData.reference || null,
+            reference_image_url: referenceImageUrl || reschedulingAppointment.reference_image_url || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', reschedulingAppointment.id);
@@ -350,6 +374,7 @@ export default function PublicBooking() {
             notes: formData.notes,
             address: formData.address || null,
             reference: formData.reference || null,
+            reference_image_url: referenceImageUrl,
             start_time: selectedSlot.start.toISOString(),
             end_time: selectedSlot.end.toISOString(),
             status: 'confirmed'
@@ -816,16 +841,45 @@ export default function PublicBooking() {
 
                   {business.show_reference && (
                     <div className="space-y-2">
-                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Ponto de Referência</label>
-                      <div className="relative">
-                        <Info className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                        <input
-                          type="text"
-                          value={formData.reference}
-                          onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-                          className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
-                          placeholder="Próximo a..."
-                        />
+                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Foto de Referência (opcional)</label>
+                      <div className="relative group">
+                        <div className={cn(
+                          "w-full rounded-xl bg-zinc-50 border-2 border-dashed border-zinc-200 transition-all overflow-hidden flex flex-col items-center justify-center min-h-[120px] relative",
+                          referenceFile ? "p-4" : "p-6",
+                          !referenceFile && "hover:bg-zinc-100 hover:border-primary/50 cursor-pointer"
+                        )}>
+                          {referenceFile ? (
+                            <div className="relative w-full h-full flex flex-col items-center gap-2">
+                              <div className="relative w-full flex justify-center">
+                                <img
+                                  src={URL.createObjectURL(referenceFile)}
+                                  alt="Referência"
+                                  className="max-h-[150px] rounded-lg shadow-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setReferenceFile(null)}
+                                  className="absolute top-0 right-1/2 translate-x-[80px] p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <p className="text-[10px] text-zinc-400 font-medium truncate max-w-[200px]">{referenceFile.name}</p>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="w-6 h-6 text-zinc-300 mb-2" />
+                              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-center">Enviar Foto de Referência</p>
+                              <p className="text-[10px] text-zinc-400 mt-1 text-center">Mostre o estilo que você deseja (opcional).</p>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setReferenceFile(e.target.files?.[0] || null)}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}

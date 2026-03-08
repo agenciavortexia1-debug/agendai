@@ -43,6 +43,7 @@ export type Appointment = {
   client_id: string | null;
   address?: string | null;
   reference?: string | null;
+  reference_image_url?: string | null;
   start_time: string;
   end_time: string;
   status: 'confirmed' | 'cancelled';

@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Calendar as CalendarIcon,
   Clock,
-  ExternalLink,
   Plus,
   Users,
   ChevronRight,
@@ -28,7 +27,9 @@ import {
   DollarSign,
   MapPin,
   Info,
-  Lock
+  Lock,
+  Image as ImageIcon,
+  ExternalLink
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addMonths, subMonths } from 'date-fns';
@@ -818,6 +819,33 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
                             <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Ponto de Referência</p>
                             <p className="font-medium text-zinc-900">{selectedAppointment.reference}</p>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Foto de Referência */}
+                      {selectedAppointment.reference_image_url && (
+                        <div className="flex flex-col gap-2 p-4 border border-zinc-100 rounded-lg sm:col-span-2">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-5 h-5 text-zinc-400" />
+                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Foto de Referência</p>
+                          </div>
+                          <a
+                            href={selectedAppointment.reference_image_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 group hover:opacity-90 transition-all flex items-center justify-center bg-zinc-50 shadow-inner"
+                          >
+                            <img
+                              src={selectedAppointment.reference_image_url}
+                              alt="Referência"
+                              className="max-h-full w-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                              <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg transform scale-90 group-hover:scale-100 transition-all">
+                                <ExternalLink className="w-4 h-4 text-zinc-900" />
+                              </div>
+                            </div>
+                          </a>
                         </div>
                       )}
                     </div>

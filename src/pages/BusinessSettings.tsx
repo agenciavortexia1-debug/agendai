@@ -255,8 +255,8 @@ export default function BusinessSettings({ session }: { session: Session }) {
 
                     <label className="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-200 cursor-pointer hover:bg-zinc-100 transition-colors">
                       <div>
-                        <p className="font-semibold text-zinc-900 text-sm">Solicitar Referência</p>
-                        <p className="text-[10px] text-zinc-500">Ponto de referência opcional.</p>
+                        <p className="font-semibold text-zinc-900 text-sm">Solicitar Foto de Referência</p>
+                        <p className="text-[10px] text-zinc-500">O cliente pode enviar uma imagem de inspiração.</p>
                       </div>
                       <input
                         type="checkbox"
