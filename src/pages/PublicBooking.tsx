@@ -144,6 +144,9 @@ export default function PublicBooking() {
       }
 
       setBusiness(bData);
+      if (bData.primary_color) {
+        document.documentElement.style.setProperty('--primary-color', bData.primary_color);
+      }
 
       // Load Services
       const { data: sData } = await supabase
