@@ -10,7 +10,6 @@ import Dashboard from './pages/Dashboard';
 import PublicBooking from './pages/PublicBooking';
 import BusinessSettings from './pages/BusinessSettings';
 import BusinessHours from './pages/BusinessHours';
-import Personalization from './pages/Personalization';
 import Services from './pages/Services';
 import Staff from './pages/Staff';
 import ClientPortal from './pages/ClientPortal';
