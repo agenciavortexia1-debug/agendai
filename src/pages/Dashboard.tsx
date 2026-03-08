@@ -27,7 +27,8 @@ import {
   XCircle,
   DollarSign,
   MapPin,
-  Info
+  Info,
+  Lock
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addMonths, subMonths } from 'date-fns';
