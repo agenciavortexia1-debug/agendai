@@ -755,19 +755,11 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg">
+                      <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg sm:col-span-2">
                         <Phone className="w-5 h-5 text-zinc-400" />
                         <div>
                           <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Telefone</p>
                           <p className="font-medium text-zinc-900">{selectedAppointment.client_phone}</p>
-                        </div>
-                      </div>
-                      {/* Retrying email, sometimes clients don't provide phone in some old flows */}
-                      <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg">
-                        <Mail className="w-5 h-5 text-zinc-400" />
-                        <div>
-                          <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">E-mail</p>
-                          <p className="font-medium text-zinc-900 truncate">{selectedAppointment.client_email}</p>
                         </div>
                       </div>
 
