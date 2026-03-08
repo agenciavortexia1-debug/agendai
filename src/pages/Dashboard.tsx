@@ -26,7 +26,8 @@ import {
   CheckCircle2,
   XCircle,
   DollarSign,
-  Lock
+  MapPin,
+  Info
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO, addMonths, subMonths } from 'date-fns';
@@ -793,6 +794,28 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
                           <div>
                             <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Profissional Responsável</p>
                             <p className="font-medium text-zinc-900">{selectedAppointment.professional?.name}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Endereço informado no agendamento */}
+                      {selectedAppointment.address && (
+                        <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg sm:col-span-2">
+                          <MapPin className="w-5 h-5 text-zinc-400" />
+                          <div>
+                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Endereço de Atendimento</p>
+                            <p className="font-medium text-zinc-900">{selectedAppointment.address}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Referência informada no agendamento */}
+                      {selectedAppointment.reference && (
+                        <div className="flex items-center gap-4 p-4 border border-zinc-100 rounded-lg sm:col-span-2">
+                          <Info className="w-5 h-5 text-zinc-400" />
+                          <div>
+                            <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">Ponto de Referência</p>
+                            <p className="font-medium text-zinc-900">{selectedAppointment.reference}</p>
                           </div>
                         </div>
                       )}

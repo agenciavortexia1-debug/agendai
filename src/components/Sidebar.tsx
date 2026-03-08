@@ -65,7 +65,6 @@ export default function Sidebar() {
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Análises', screenKey: 'Análises' },
     { path: '/dashboard/hours', icon: Clock, label: 'Horários', screenKey: 'Configurações' },
     { path: '/dashboard/management', icon: LayoutGrid, label: 'Gestão', screenKey: 'Equipe' },
-    { path: '/dashboard/personalization', icon: Palette, label: 'Personalização', screenKey: 'Personalização' },
     { path: '/dashboard/settings', icon: Settings, label: 'Configurações', screenKey: 'Configurações' },
   ];
 

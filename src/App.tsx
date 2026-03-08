@@ -104,10 +104,6 @@ export default function App() {
           element={session ? <BusinessHours session={session} /> : <Navigate to="/auth" />}
         />
         <Route
-          path="/dashboard/personalization"
-          element={session ? <Personalization session={session} /> : <Navigate to="/auth" />}
-        />
-        <Route
           path="/dashboard/services"
           element={session ? <Services session={session} /> : <Navigate to="/auth" />}
         />

@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   Loader2,
   AlertCircle,
-  Scissors
+  Scissors,
+  MapPin,
+  Info
 } from 'lucide-react';
 import {
   format,
@@ -62,7 +64,9 @@ export default function PublicBooking() {
     name: '',
     email: '',
     phone: '',
-    notes: ''
+    notes: '',
+    address: '',
+    reference: ''
   });
   const [booking, setBooking] = useState(false);
 
@@ -320,6 +324,8 @@ export default function PublicBooking() {
             service_id: selectedService?.id || null, // Atualizado
             professional_id: selectedProfessional?.id || null, // Atualizado
             notes: formData.notes,
+            address: formData.address || null,
+            reference: formData.reference || null,
             updated_at: new Date().toISOString()
           })
           .eq('id', reschedulingAppointment.id);
@@ -338,6 +344,8 @@ export default function PublicBooking() {
             service_id: selectedService?.id || null, // Atualizado
             professional_id: selectedProfessional?.id || null, // Atualizado
             notes: formData.notes,
+            address: formData.address || null,
+            reference: formData.reference || null,
             start_time: selectedSlot.start.toISOString(),
             end_time: selectedSlot.end.toISOString(),
             status: 'confirmed'
@@ -399,14 +407,7 @@ export default function PublicBooking() {
 
   return (
     <div
-      className={cn("min-h-screen py-8 md:py-12 px-4 md:px-6 transition-all duration-300", business.font_family || 'font-sans')}
-      style={{
-        '--primary-color': business.primary_color || '#18181b',
-        '--bg-color': business.bg_color || '#fcfcfc',
-        '--text-color': business.text_color || '#18181b',
-        backgroundColor: 'var(--bg-color)',
-        color: 'var(--text-color)'
-      } as React.CSSProperties}
+      className="min-h-screen py-8 md:py-12 px-4 md:px-6 bg-zinc-50"
     >
       <div className="max-w-4xl mx-auto">
         {/* Business Header */}
@@ -791,6 +792,39 @@ export default function PublicBooking() {
                       placeholder="Alguma informação adicional?"
                     />
                   </div>
+
+                  {business.show_address && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Endereço de Atendimento</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
+                        <input
+                          type="text"
+                          required
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                          placeholder="Rua, número, bairro..."
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {business.show_reference && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Ponto de Referência</label>
+                      <div className="relative">
+                        <Info className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
+                        <input
+                          type="text"
+                          value={formData.reference}
+                          onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                          className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                          placeholder="Próximo a..."
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     type="submit"

@@ -10,6 +10,8 @@ export type Business = {
   text_color: string | null;
   appointment_duration_minutes: number;
   services: string[] | null;
+  show_address: boolean;
+  show_reference: boolean;
   created_at: string;
 };
 
@@ -39,6 +41,8 @@ export type Appointment = {
   notes: string | null;
   service: string | null;
   client_id: string | null;
+  address?: string | null;
+  reference?: string | null;
   start_time: string;
   end_time: string;
   status: 'confirmed' | 'cancelled';
