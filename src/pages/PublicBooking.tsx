@@ -72,8 +72,9 @@ export default function PublicBooking() {
 
   // Load session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    supabase.auth.getSession().then((res) => {
+      const session = res.data?.session;
+      setSession(session || null);
       if (session?.user) {
         setFormData(prev => ({
           ...prev,
@@ -862,8 +863,12 @@ export default function PublicBooking() {
                 </p>
                 <div className="bg-zinc-50 p-6 rounded-lg mb-8 text-left border border-zinc-100">
                   <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 mb-2">Resumo</p>
-                  <p className="font-semibold text-sm md:text-base text-zinc-900">{format(selectedSlot!.start, "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
-                  <p className="text-xl md:text-2xl font-display font-bold text-primary">{format(selectedSlot!.start, "HH:mm")}</p>
+                  <p className="font-semibold text-sm md:text-base text-zinc-900">
+                    {selectedSlot ? format(selectedSlot.start, "EEEE, d 'de' MMMM", { locale: ptBR }) : 'Horário não selecionado'}
+                  </p>
+                  <p className="text-xl md:text-2xl font-display font-bold text-primary">
+                    {selectedSlot ? format(selectedSlot.start, "HH:mm") : '--:--'}
+                  </p>
                 </div>
                 <button
                   onClick={() => window.location.reload()}

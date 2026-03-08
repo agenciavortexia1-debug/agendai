@@ -34,7 +34,8 @@ export default function App() {
       }
     }
     supabase.auth.getSession()
-      .then(({ data: { session } }) => {
+      .then((res) => {
+        const session = res.data?.session;
         setSession(session);
         setLoading(false);
       })
@@ -54,17 +55,19 @@ export default function App() {
     if (session) {
       supabase
         .from('businesses')
-        .select('bg_color, text_color, font_family')
+        .select('primary_color, bg_color, text_color, font_family')
         .eq('user_id', session.user.id)
         .single()
         .then(({ data }) => {
           if (data) {
+            document.documentElement.style.setProperty('--primary-color', data.primary_color || '#18181b');
             document.documentElement.style.setProperty('--bg-color', data.bg_color || '#f5f5f0');
             document.documentElement.style.setProperty('--text-color', data.text_color || '#141414');
             document.body.className = data.font_family || 'font-sans';
           }
         });
     } else {
+      document.documentElement.style.setProperty('--primary-color', '#18181b');
       document.documentElement.style.setProperty('--bg-color', '#f5f5f0');
       document.documentElement.style.setProperty('--text-color', '#141414');
       document.body.className = 'font-sans';
