@@ -9,5 +9,10 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project')) {
 
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
+  supabaseAnonKey || 'placeholder',
+  {
+    db: {
+      schema: 'agendai',
+    },
+  }
 );
