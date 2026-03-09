@@ -60,11 +60,14 @@ export default function App() {
         .single()
         .then(({ data }) => {
           if (data) {
-            document.documentElement.style.setProperty('--primary-color', data.primary_color || '#18181b');
-            document.documentElement.style.setProperty('--bg-color', data.bg_color || '#f5f5f0');
-            document.documentElement.style.setProperty('--text-color', data.text_color || '#141414');
-            document.body.className = data.font_family || 'font-sans';
+            document.documentElement.style.setProperty('--primary-color', (data as any).primary_color || '#18181b');
+            document.documentElement.style.setProperty('--bg-color', (data as any).bg_color || '#f5f5f0');
+            document.documentElement.style.setProperty('--text-color', (data as any).text_color || '#141414');
+            document.body.className = (data as any).font_family || 'font-sans';
           }
+        })
+        .catch(err => {
+          console.error('Error fetching business settings:', err);
         });
     } else {
       document.documentElement.style.setProperty('--primary-color', '#18181b');
