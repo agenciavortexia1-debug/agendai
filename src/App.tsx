@@ -44,8 +44,12 @@ export default function App() {
         setLoading(false);
       });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      // Quando o usuario clica no link de recuperação de senha, redireciona para a tela correta
+      if (event === 'PASSWORD_RECOVERY') {
+        window.location.href = '/reset-password';
+      }
     });
 
     return () => subscription.unsubscribe();
