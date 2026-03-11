@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Save,
   Loader2,
-  Globe,
   Building2,
   Timer,
   Image as ImageIcon,
@@ -75,13 +74,6 @@ export default function BusinessSettings({ session }: { session: Session }) {
     setBusiness(prev => ({ ...prev, name, slug: newSlug }));
   };
 
-  const handleSlugChange = (slug: string) => {
-    const sanitized = slug
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/--+/g, '-');
-    setBusiness(prev => ({ ...prev, slug: sanitized }));
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -192,7 +184,7 @@ export default function BusinessSettings({ session }: { session: Session }) {
                     <Info className="w-4 h-4 text-zinc-400" /> Informações Gerais
                   </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-sans font-bold uppercase tracking-widest text-zinc-400 ml-1">Nome do Negócio</label>
                       <div className="relative">
@@ -204,21 +196,6 @@ export default function BusinessSettings({ session }: { session: Session }) {
                           onChange={(e) => handleNameChange(e.target.value)}
                           className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all font-medium"
                           placeholder="Ex: Barbearia do João"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-sans font-bold uppercase tracking-widest text-zinc-400 ml-1">Slug (Link Público)</label>
-                      <div className="relative">
-                        <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                        <input
-                          type="text"
-                          required
-                          value={business.slug}
-                          onChange={(e) => handleSlugChange(e.target.value)}
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all font-medium"
-                          placeholder="seu-negocio"
                         />
                       </div>
                     </div>
