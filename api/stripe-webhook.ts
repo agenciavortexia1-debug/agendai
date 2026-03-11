@@ -10,12 +10,13 @@ export const config = {
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2023-10-16',
+    apiVersion: '2024-04-10',
 });
 
 const supabaseAdmin = createClient(
     process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    { db: { schema: 'Agenda2' } }
 );
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
