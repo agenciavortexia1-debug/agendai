@@ -362,21 +362,36 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* Link da Agenda - copia o link público */}
-            <button
-              onClick={handleCopyLink}
-              className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 rounded-lg border border-zinc-200 font-sans font-semibold text-zinc-900 hover:bg-zinc-50 transition-all shadow-sm text-sm flex-1 sm:flex-none"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copiado!' : 'Link da Agenda'}
-            </button>
-            {/* Link do Colaborador - copia o link de login */}
+            {/* Link da Agenda - grupo: copiar + abrir */}
+            <div className="flex items-center border border-zinc-200 rounded-lg shadow-sm overflow-hidden flex-1 sm:flex-none">
+              <button
+                onClick={handleCopyLink}
+                disabled={!business?.slug}
+                className="flex items-center justify-center gap-2 bg-white px-4 py-2.5 font-semibold text-zinc-900 hover:bg-zinc-50 transition-all text-sm disabled:opacity-40"
+                title="Copiar link da agenda"
+              >
+                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copiado!' : 'Link da Agenda'}
+              </button>
+              {business?.slug && (
+                <a
+                  href={`/b/${business.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center px-3 py-2.5 bg-zinc-50 border-l border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-all"
+                  title="Abrir página de agendamento"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
+            </div>
+            {/* Link do Colaborador */}
             <button
               onClick={handleCopyStaffLink}
-              className="flex items-center justify-center gap-2 bg-zinc-900 text-white px-4 py-2.5 rounded-lg font-sans font-semibold hover:bg-black transition-all shadow-sm text-sm flex-1 sm:flex-none"
+              className="flex items-center justify-center gap-2 bg-zinc-900 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-black transition-all shadow-sm text-sm flex-1 sm:flex-none"
             >
               {copiedStaff ? <Check className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-              {copiedStaff ? 'Copiado!' : 'Link do Colaborador'}
+              {copiedStaff ? 'Copiado!' : 'Colaborador'}
             </button>
           </div>
         </header>
