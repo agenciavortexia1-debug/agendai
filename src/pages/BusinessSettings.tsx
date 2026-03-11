@@ -60,18 +60,28 @@ export default function BusinessSettings({ session }: { session: Session }) {
     loadBusiness();
   }, [session]);
 
-  // Auto-slug logic
-  useEffect(() => {
-    if (business.name && !business.id) { // Only auto-slug for NEW businesses or if you want it always forced
-      const generatedSlug = business.name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
-      setBusiness(prev => ({ ...prev, slug: generatedSlug }));
-    }
-  }, [business.name, business.id]);
+  // Função de sanitização do slug
+  const generateSlug = (name: string) =>
+    name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+  // Auto-slug ao mudar nome (apenas se o slug ainda não foi editado manualmente ou é negócio novo)
+  const handleNameChange = (name: string) => {
+    const newSlug = generateSlug(name);
+    setBusiness(prev => ({ ...prev, name, slug: newSlug }));
+  };
+
+  const handleSlugChange = (slug: string) => {
+    const sanitized = slug
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/--+/g, '-');
+    setBusiness(prev => ({ ...prev, slug: sanitized }));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -191,7 +201,7 @@ export default function BusinessSettings({ session }: { session: Session }) {
                           type="text"
                           required
                           value={business.name}
-                          onChange={(e) => setBusiness({ ...business, name: e.target.value })}
+                          onChange={(e) => handleNameChange(e.target.value)}
                           className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all font-medium"
                           placeholder="Ex: Barbearia do João"
                         />
@@ -205,9 +215,9 @@ export default function BusinessSettings({ session }: { session: Session }) {
                         <input
                           type="text"
                           required
-                          readOnly
                           value={business.slug}
-                          className="w-full bg-zinc-100 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 text-zinc-500 font-medium cursor-not-allowed"
+                          onChange={(e) => handleSlugChange(e.target.value)}
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all font-medium"
                           placeholder="seu-negocio"
                         />
                       </div>
