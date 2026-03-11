@@ -21,10 +21,7 @@ serve(async (req) => {
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-            {
-                global: { headers: { Authorization: req.headers.get('Authorization')! } },
-                db: { schema: 'agendai' }
-            }
+            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
         )
 
         const { data: { user } } = await supabaseClient.auth.getUser()

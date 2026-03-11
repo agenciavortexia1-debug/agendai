@@ -12,7 +12,7 @@ export const supabase = createClient(
   supabaseAnonKey || 'placeholder',
   {
     db: {
-      schema: 'agendai',
-    },
+      schema: 'Agenda2'
+    }
   }
 );

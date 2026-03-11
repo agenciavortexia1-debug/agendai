@@ -15,12 +15,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 const supabaseAdmin = createClient(
     process.env.SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-    {
-        db: {
-            schema: 'agendai',
-        },
-    }
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
