@@ -296,8 +296,23 @@ export default function PublicBooking() {
 
   const handleRescheduleClick = (appointment: Appointment) => {
     setReschedulingAppointment(appointment);
-    // Para simplificar, na remarcação nós resetamos a seleção de serviço e profissional
-    setStep('service');
+    
+    // Find the original service and professional
+    const appointmentAny = appointment as any;
+    const service = services.find(s => s.id === appointmentAny.service_id);
+    const professional = professionals.find(p => p.id === appointmentAny.professional_id);
+
+    if (service && professional) {
+      setSelectedService(service);
+      setSelectedProfessional(professional);
+      setStep('date');
+    } else if (service) {
+      setSelectedService(service);
+      setStep('professional');
+    } else {
+      setStep('service');
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
