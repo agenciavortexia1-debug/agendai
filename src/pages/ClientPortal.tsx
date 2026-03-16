@@ -58,6 +58,30 @@ export default function ClientPortal() {
     
     setCancellingId(id);
     try {
+      const { error, data } = await supabase
+        .from('appointments')
+        .update({ status: 'cancelled' })
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error('Cancel error:', error);
+        throw error;
+      }
+      console.log('Cancelled successfully:', data);
+      
+      setAppointments(prev => prev.map(app => 
+        app.id === id ? { ...app, status: 'cancelled' } : app
+      ));
+      return true;
+    } catch (err: any) {
+      alert(`Erro ao cancelar: ${err?.message || 'Tente novamente.'}`);
+      return false;
+    } finally {
+      setCancellingId(null);
+    }
+  };
+    try {
       const { error } = await supabase
         .from('appointments')
         .update({ status: 'cancelled' })
