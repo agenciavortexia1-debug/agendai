@@ -195,14 +195,10 @@ export default function Analytics({ session }: { session: Session }) {
 
             <main className="flex-1 p-4 md:p-10 overflow-y-auto pb-24 md:pb-10">
                 <header className="mb-6 md:mb-8">
-                    <Link to="/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-4 font-medium">
-                        <ArrowLeft className="w-4 h-4" />
-                        Voltar para Agenda
-                    </Link>
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-display font-bold text-zinc-900">Análises de Desempenho</h1>
-                            <p className="text-zinc-500 mt-1 text-sm">Acompanhe o crescimento e a eficiência do seu negócio.</p>
+                            <h1 className="text-sm font-sans font-bold text-zinc-900 leading-tight">Análises de Desempenho</h1>
+                            <p className="text-[10px] text-zinc-400 leading-tight hidden sm:block mt-1">Acompanhe o crescimento e a eficiência do seu negócio.</p>
                         </div>
                         {/* Filtro de data no topo, afeta todos os indicadores */}
                         <div className="flex items-center gap-2 bg-white border border-zinc-200 p-2.5 rounded-lg shadow-sm self-start sm:self-auto">

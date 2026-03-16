@@ -86,7 +86,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-[32px] p-6 md:p-10 shadow-xl border border-black/5"
+      className="bg-white rounded-xl p-6 md:p-10 shadow-xl border border-black/5"
     >
 
 
@@ -108,11 +108,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
             className="w-full bg-[var(--primary-color)] text-white py-4 rounded-2xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
           >
             Confirmar e Continuar
-            <ArrowRight className="w-4 h-4" />
           </button>
-          <p className="mt-8 text-[10px] font-sans font-medium uppercase tracking-widest text-black/20 px-4">
-            Se você for o dono do link, clique em "Confirmar" para testar ou ignore esta tela.
-          </p>
         </div>
       ) : (
         <form onSubmit={handleAuth} className="space-y-4">

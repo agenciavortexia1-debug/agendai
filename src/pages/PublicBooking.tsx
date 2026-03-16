@@ -397,7 +397,7 @@ export default function PublicBooking() {
   if (error || !business) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-50">
-        <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md text-center border border-zinc-100">
+        <div className="bg-white p-10 rounded-xl shadow-xl max-w-md text-center border border-zinc-100">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2 text-zinc-900">{error || 'Algo deu errado'}</h2>
           <p className="text-zinc-500 text-sm">O link pode estar incorreto ou o negócio não existe.</p>
@@ -496,7 +496,7 @@ export default function PublicBooking() {
                 <p className="text-sm text-zinc-500">O que você deseja realizar?</p>
               </div>
               {services.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-dashed border-zinc-200 p-10 text-center">
+                <div className="bg-white rounded-xl border border-dashed border-zinc-200 p-10 text-center">
                   <AlertCircle className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
                   <p className="text-sm text-zinc-400">Nenhum serviço cadastrado.</p>
                 </div>
@@ -717,7 +717,7 @@ export default function PublicBooking() {
               </button>
 
               {/* Summary card */}
-              <div className="bg-zinc-900 rounded-2xl p-5 mb-6 text-white">
+              <div className="bg-zinc-900 rounded-xl p-5 mb-6 text-white">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Resumo do agendamento</p>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
@@ -845,16 +845,16 @@ export default function PublicBooking() {
               </div>
 
               {/* Receipt/Voucher card */}
-              <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-xl">
+              <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-xl">
                 {/* Receipt header */}
-                <div className="bg-zinc-900 px-6 py-5">
+                <div className="bg-zinc-50 px-6 py-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Comprovante</p>
-                      <h3 className="text-white font-bold text-lg mt-0.5 capitalize">{business.name}</h3>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Comprovante</p>
+                      <h3 className="text-zinc-900 font-bold text-lg mt-0.5 capitalize">{business.name}</h3>
                     </div>
                     {business.logo_url && (
-                      <img src={business.logo_url} alt={business.name} className="w-12 h-12 rounded-xl object-cover opacity-90" />
+                      <img src={business.logo_url} alt={business.name} className="w-12 h-12 rounded-xl object-cover border border-zinc-200" />
                     )}
                   </div>
                 </div>

@@ -122,16 +122,12 @@ export default function StaffLogin() {
                         >
                             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                                 <>
-                                    Entrar no Agendai
+                                    Acessar Agendamentos
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
-                </div>
-
-                <div className="bg-zinc-50 p-6 border-t border-zinc-100 text-center">
-                    <p className="text-xs text-zinc-400 font-medium">Caso tenha esquecido seus dados, solicite ao dono do negócio.</p>
                 </div>
             </motion.div>
         </div>
