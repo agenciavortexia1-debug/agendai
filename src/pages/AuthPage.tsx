@@ -8,6 +8,11 @@ export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Limpar qualquer sessão de colaborador remanescente ao acessar a página de login de negócio
+    localStorage.removeItem('staff_session');
+  }, []);
+
   // Se vier de /auth?signup=true (pos-pagamento), inicia direto no modo cadastro
   const isPostPayment = searchParams.get('signup') === 'true';
   const sessionId = searchParams.get('session_id') || '';

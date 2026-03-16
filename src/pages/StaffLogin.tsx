@@ -18,6 +18,9 @@ export default function StaffLogin() {
         setError('');
 
         try {
+            // Deslogar primeiro para não conflitar com a sessão de dono de negócio
+            await supabase.auth.signOut();
+
             const { data, error: fetchError } = await supabase
                 .from('professionals')
                 .select('*, businesses(slug, name)')
