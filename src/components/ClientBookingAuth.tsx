@@ -91,10 +91,10 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
 
 
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-sans font-semibold mb-2">
+        <h2 className="text-2xl font-bold text-zinc-900 mb-2">
           {session ? `Olá, ${session.user.user_metadata?.full_name || session.user.email}` : (isLogin ? 'Acesse sua conta' : 'Crie sua conta')}
         </h2>
-        <p className="text-black/40 text-sm">
+        <p className="text-zinc-500 text-sm">
           {session
             ? 'Você já está conectado. Deseja continuar com esta conta?'
             : (isLogin ? 'Entre para gerenciar seus agendamentos' : 'Cadastre-se para agendar e poder remarcar depois')}
@@ -105,7 +105,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
         <div className="space-y-4 text-center">
           <button
             onClick={() => onSuccess(session.user.id, session.user.user_metadata?.full_name || '', session.user.email || '')}
-            className="w-full bg-[var(--primary-color)] text-white py-4 rounded-2xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2"
+            className="w-full bg-zinc-900 text-white py-4 rounded-xl font-bold hover:bg-black transition-all flex items-center justify-center gap-2"
           >
             Confirmar e Continuar
           </button>
@@ -113,36 +113,36 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
       ) : (
         <form onSubmit={handleAuth} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-black/40 ml-1">Seu Nome</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1 block">Seu Nome</label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#f5f5f0] border-none rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all text-zinc-900 outline-none"
                 placeholder="Digite seu nome"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-black/40 ml-1">Senha</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 ml-1 block">Senha</label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#f5f5f0] border-none rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all text-zinc-900 outline-none"
                 placeholder="Crie uma senha"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-black/40 hover:text-black/60 focus:outline-none"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -158,7 +158,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[var(--primary-color)] text-white py-4 rounded-2xl font-sans font-semibold hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+            className="w-full bg-zinc-900 text-white py-4 rounded-xl font-bold hover:bg-black transition-all flex items-center justify-center gap-2 disabled:opacity-70 mt-4"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <>
@@ -172,7 +172,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-black/40 hover:text-black transition-colors"
+              className="text-sm text-zinc-500 hover:text-zinc-900 transition-colors"
             >
               {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Entre'}
             </button>

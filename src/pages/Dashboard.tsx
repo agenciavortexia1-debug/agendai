@@ -524,7 +524,7 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
           </div>
 
           {/* Right: Calendar */}
-          <div className="hidden md:flex flex-col w-64 xl:w-72 border-l border-zinc-100 flex-shrink-0 bg-white overflow-hidden">
+          <div className="hidden md:flex flex-col w-80 lg:w-96 xl:w-[480px] border-l border-zinc-100 flex-shrink-0 bg-white overflow-hidden">
             <CalendarView />
           </div>
         </div>
