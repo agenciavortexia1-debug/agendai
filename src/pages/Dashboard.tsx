@@ -108,7 +108,7 @@ export default function Dashboard({ session, staffSession }: { session?: any; st
               'postgres_changes',
               {
                 event: '*',
-                schema: 'public',
+                schema: 'Agenda2',
                 table: 'appointments',
                 filter: `business_id=eq.${bData.id}`
               },

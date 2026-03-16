@@ -53,8 +53,8 @@ export default function ClientPortal() {
     }
   }
 
-  const handleCancel = async (id: string) => {
-    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
+  const handleCancel = async (id: string, skipConfirm = false) => {
+    if (!skipConfirm && !confirm('Tem certeza que deseja cancelar este agendamento?')) return false;
     
     setCancellingId(id);
     try {
@@ -68,8 +68,10 @@ export default function ClientPortal() {
       setAppointments(prev => prev.map(app => 
         app.id === id ? { ...app, status: 'cancelled' } : app
       ));
+      return true;
     } catch (err) {
       alert('Erro ao cancelar agendamento');
+      return false;
     } finally {
       setCancellingId(null);
     }
@@ -175,7 +177,14 @@ export default function ClientPortal() {
                         Cancelar
                       </button>
                       <button 
-                        onClick={() => navigate(`/b/${app.business.slug}`)}
+                        onClick={async () => {
+                          if (confirm('Isto irá cancelar seu horário atual para você poder escolher um novo. Deseja continuar?')) {
+                            const cancelled = await handleCancel(app.id, true);
+                            if (cancelled) {
+                              navigate(`/b/${app.business.slug}`);
+                            }
+                          }
+                        }}
                         className="flex-1 bg-[#5A5A40] text-white py-3 rounded-2xl font-sans font-semibold hover:bg-[#4a4a35] transition-all flex items-center justify-center gap-2"
                       >
                         Remarcar
