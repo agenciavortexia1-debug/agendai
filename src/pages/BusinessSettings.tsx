@@ -146,230 +146,204 @@ export default function BusinessSettings({ session }: { session: Session }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="h-screen flex items-center justify-center bg-zinc-50">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row transition-all duration-300 bg-zinc-50/50">
+    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-zinc-50">
       <Sidebar />
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto pb-24 md:pb-10">
-        <div className="max-w-4xl mx-auto">
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6">
-            <ArrowLeft className="w-4 h-4" />
-            Voltar para Dashboard
-          </Link>
-
-          <header className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-display font-bold text-zinc-900">Configurações do Negócio</h1>
-                <p className="text-zinc-500 text-sm">Gerencie as informações principais da sua empresa</p>
-              </div>
+      <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+        {/* Compact Top Bar */}
+        <header className="flex-shrink-0 bg-white border-b border-zinc-100 px-4 md:px-6 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link to="/dashboard" className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 rounded-lg transition-all flex-shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <h1 className="text-sm font-sans font-bold text-zinc-900 truncate leading-tight">Configurações do Negócio</h1>
+              <p className="text-[10px] text-zinc-400 leading-tight hidden sm:block">Informações principais da sua empresa</p>
             </div>
-          </header>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {error && (
+              <span className="text-xs text-red-500 font-medium hidden sm:block">{error}</span>
+            )}
+            <button
+              type="submit"
+              form="settings-form"
+              disabled={saving || uploadingLogo}
+              className="flex items-center gap-1.5 bg-zinc-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-black transition-all text-xs disabled:opacity-70"
+            >
+              {saving || uploadingLogo ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              <span className="hidden sm:inline">{saving || uploadingLogo ? (uploadingLogo ? 'Enviando...' : 'Salvando...') : 'Salvar'}</span>
+            </button>
+          </div>
+        </header>
 
-          <form onSubmit={handleSave} className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Scrollable form body */}
+        <div className="flex-1 overflow-y-auto">
+          <form id="settings-form" onSubmit={handleSave}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 min-h-full">
 
-              {/* Coluna da Esquerda: Dados Básicos */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-zinc-200 space-y-6">
-                  <h3 className="font-sans font-bold text-zinc-900 flex items-center gap-2">
-                    <Info className="w-4 h-4 text-zinc-400" /> Informações Gerais
+              {/* Left: main config */}
+              <div className="lg:col-span-2 p-4 md:p-6 space-y-4 border-r border-zinc-100">
+
+                {/* Informações Gerais */}
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 space-y-4">
+                  <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <Info className="w-3.5 h-3.5" /> Informações Gerais
                   </h3>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-sans font-bold uppercase tracking-widest text-zinc-400 ml-1">Nome do Negócio</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 ml-0.5">Nome do Negócio</label>
                       <div className="relative">
-                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
                         <input
                           type="text"
                           required
                           value={business.name}
                           onChange={(e) => handleNameChange(e.target.value)}
-                          className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all font-medium"
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:ring-2 focus:ring-primary transition-all font-medium"
                           placeholder="Ex: Barbearia do João"
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-sans font-bold uppercase tracking-widest text-zinc-400 ml-1">Duração Padrão do Atendimento</label>
-                    <div className="relative">
-                      <Timer className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                      <select
-                        value={business.appointment_duration_minutes}
-                        onChange={(e) => setBusiness({ ...business, appointment_duration_minutes: Number(e.target.value) })}
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all appearance-none font-medium"
-                      >
-                        <option value={15}>15 minutos</option>
-                        <option value={30}>30 minutos</option>
-                        <option value={45}>45 minutos</option>
-                        <option value={60}>1 hora</option>
-                        <option value={90}>1 hora e 30 minutos</option>
-                        <option value={120}>2 horas</option>
-                      </select>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 ml-0.5">Duração Padrão</label>
+                      <div className="relative">
+                        <Timer className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
+                        <select
+                          value={business.appointment_duration_minutes}
+                          onChange={(e) => setBusiness({ ...business, appointment_duration_minutes: Number(e.target.value) })}
+                          className="w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:ring-2 focus:ring-primary transition-all appearance-none font-medium"
+                        >
+                          <option value={15}>15 minutos</option>
+                          <option value={30}>30 minutos</option>
+                          <option value={45}>45 minutos</option>
+                          <option value={60}>1 hora</option>
+                          <option value={90}>1h 30min</option>
+                          <option value={120}>2 horas</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-zinc-200 space-y-6">
-                  <h3 className="font-sans font-bold text-zinc-900 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-zinc-400" /> Campos no Agendamento
+                {/* Campos no Agendamento */}
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 space-y-3">
+                  <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5" /> Campos no Agendamento
                   </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <label className="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-200 cursor-pointer hover:bg-zinc-100 transition-colors">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg border border-zinc-200 cursor-pointer hover:bg-zinc-100 transition-colors">
                       <div>
-                        <p className="font-semibold text-zinc-900 text-sm">Solicitar Endereço</p>
+                        <p className="font-semibold text-zinc-900 text-xs">Solicitar Endereço</p>
                         <p className="text-[10px] text-zinc-500">O cliente informa onde será.</p>
                       </div>
                       <input
                         type="checkbox"
                         checked={business.show_address}
                         onChange={(e) => setBusiness({ ...business, show_address: e.target.checked })}
-                        className="w-5 h-5 accent-zinc-900"
+                        className="w-4 h-4 accent-zinc-900"
                       />
                     </label>
-
-                    <label className="flex items-center justify-between p-4 bg-zinc-50 rounded-xl border border-zinc-200 cursor-pointer hover:bg-zinc-100 transition-colors">
+                    <label className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg border border-zinc-200 cursor-pointer hover:bg-zinc-100 transition-colors">
                       <div>
-                        <p className="font-semibold text-zinc-900 text-sm">Solicitar Foto de Referência</p>
-                        <p className="text-[10px] text-zinc-500">O cliente pode enviar uma imagem de inspiração.</p>
+                        <p className="font-semibold text-zinc-900 text-xs">Solicitar Foto de Referência</p>
+                        <p className="text-[10px] text-zinc-500">Imagem de inspiração do cliente.</p>
                       </div>
                       <input
                         type="checkbox"
                         checked={business.show_reference}
                         onChange={(e) => setBusiness({ ...business, show_reference: e.target.checked })}
-                        className="w-5 h-5 accent-zinc-900"
+                        className="w-4 h-4 accent-zinc-900"
                       />
                     </label>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-zinc-200 space-y-6">
-                  <h3 className="font-sans font-bold text-zinc-900 flex items-center gap-2">
-                    <Scissors className="w-4 h-4 text-zinc-400" /> Serviços Oferecidos
+                {/* Serviços */}
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 space-y-3">
+                  <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <Scissors className="w-3.5 h-3.5" /> Serviços Oferecidos
                   </h3>
-
                   <div className="flex gap-2">
                     <div className="relative flex-1">
-                      <Scissors className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
+                      <Scissors className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
                       <input
                         type="text"
                         value={newService}
                         onChange={(e) => setNewService(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all font-medium"
+                        className="w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 pl-10 pr-3 text-sm focus:ring-2 focus:ring-primary transition-all font-medium"
                         placeholder="Ex: Corte de Cabelo"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={addService}
-                      className="bg-zinc-900 text-white px-6 rounded-xl hover:bg-black transition-all shadow-md font-bold"
+                      className="bg-zinc-900 text-white px-4 rounded-lg hover:bg-black transition-all"
                     >
-                      <Plus className="w-5 h-5" />
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
-
                   <div className="flex flex-wrap gap-2">
                     {(business.services || []).map((service) => (
-                      <div
-                        key={service}
-                        className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-lg group"
-                      >
-                        <span className="text-sm font-semibold text-zinc-700">{service}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeService(service)}
-                          className="text-zinc-300 hover:text-red-500 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
+                      <div key={service} className="flex items-center gap-1.5 bg-zinc-50 border border-zinc-200 px-2.5 py-1 rounded-lg">
+                        <span className="text-xs font-semibold text-zinc-700">{service}</span>
+                        <button type="button" onClick={() => removeService(service)} className="text-zinc-300 hover:text-red-500 transition-colors">
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))}
                     {(!business.services || business.services.length === 0) && (
-                      <p className="text-xs text-zinc-400 italic">Nenhum serviço adicionado ainda.</p>
+                      <p className="text-[11px] text-zinc-400 italic">Nenhum serviço adicionado ainda.</p>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Coluna da Direita: Logo */}
-              <div className="space-y-6">
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-zinc-200 space-y-6">
-                  <h3 className="font-sans font-bold text-zinc-900 flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-zinc-400" /> Logo da Empresa
+              {/* Right: Logo + Save */}
+              <div className="p-4 md:p-6 space-y-4">
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 space-y-3">
+                  <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <ImageIcon className="w-3.5 h-3.5" /> Logo da Empresa
                   </h3>
-
-                  <div className="space-y-4">
-                    <div className="relative group">
-                      <div className="w-full aspect-square rounded-2xl bg-zinc-50 border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center text-center p-4 group-hover:bg-zinc-100 transition-all overflow-hidden">
-                        {(logoFile || business.logo_url) ? (
-                          <img
-                            src={logoFile ? URL.createObjectURL(logoFile) : business.logo_url!}
-                            alt="Logo preview"
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <>
-                            <Upload className="w-8 h-8 text-zinc-300 mb-2" />
-                            <p className="text-xs text-zinc-400 font-medium">Enviar Logo</p>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
+                  <div className="relative group">
+                    <div className="w-full aspect-square rounded-xl bg-zinc-50 border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center text-center p-4 group-hover:bg-zinc-100 transition-all overflow-hidden">
+                      {(logoFile || business.logo_url) ? (
+                        <img
+                          src={logoFile ? URL.createObjectURL(logoFile) : business.logo_url!}
+                          alt="Logo preview"
+                          className="w-full h-full object-contain"
                         />
-                      </div>
-                      {(logoFile || business.logo_url) && (
-                        <div className="absolute top-2 right-2 flex gap-1">
-                          {logoFile && (
-                            <button
-                              type="button"
-                              onClick={() => setLogoFile(null)}
-                              className="p-1.5 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition-all"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-7 h-7 text-zinc-300 mb-1.5" />
+                          <p className="text-xs text-zinc-400 font-medium">Enviar Logo</p>
+                          <p className="text-[10px] text-zinc-300">PNG, JPG, SVG</p>
+                        </>
                       )}
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                     </div>
-                    <p className="text-[10px] text-zinc-400 text-center italic">A logo aparecerá na sua página pública de reservas.</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {error && (
-                    <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-500 text-xs font-semibold">
-                      {error}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={saving || uploadingLogo}
-                    className="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-xl flex items-center justify-center gap-2 disabled:opacity-70 active:scale-[0.98]"
-                  >
-                    {saving || uploadingLogo ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> {uploadingLogo ? 'Enviando...' : 'Salvando...'}</>
-                    ) : (
-                      <><Save className="w-5 h-5" /> Salvar Configurações</>
+                    {logoFile && (
+                      <button type="button" onClick={() => setLogoFile(null)} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-all">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     )}
-                  </button>
+                  </div>
+                  <p className="text-[10px] text-zinc-400 text-center">Aparece na página pública de agendamento</p>
                 </div>
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-500 text-xs font-medium">{error}</div>
+                )}
               </div>
 
             </div>

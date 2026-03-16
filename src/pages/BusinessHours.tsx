@@ -115,179 +115,151 @@ export default function BusinessHours({ session }: { session: Session }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zinc-900"></div>
+      <div className="h-screen flex items-center justify-center bg-zinc-50">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row transition-all duration-300">
+    <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-zinc-50">
       <Sidebar />
-      <main className="flex-1 p-4 md:p-10 overflow-y-auto pb-20 md:pb-8 bg-zinc-50/50">
-        <div className="max-w-5xl mx-auto">
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6 text-sm font-medium">
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Link>
-
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-semibold text-zinc-900 tracking-tight">Horários de Funcionamento</h1>
-              <p className="text-zinc-500 text-sm mt-1">Configure os dias e horários de atendimento do seu negócio.</p>
+      <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+        {/* Compact Top Bar */}
+        <header className="flex-shrink-0 bg-white border-b border-zinc-100 px-4 md:px-6 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link to="/dashboard" className="p-1.5 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 rounded-lg transition-all flex-shrink-0">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <div>
+              <h1 className="text-sm font-sans font-bold text-zinc-900 leading-tight">Horários de Funcionamento</h1>
+              <p className="text-[10px] text-zinc-400 leading-tight hidden sm:block">Dias e horários de atendimento</p>
             </div>
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className={cn(
+              "flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-70",
+              saved ? "bg-emerald-500 text-white" : "bg-zinc-900 text-white hover:bg-zinc-800"
+            )}
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : saved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}</span>
+          </button>
+        </header>
 
-            {/* Main Card */}
-            <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-100">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-100">
 
-                {/* Coluna Esquerda: Dias e Horários */}
-                <div className="p-6 md:p-8">
-                  <h2 className="text-sm font-semibold text-zinc-900 mb-6">Dias e Horários</h2>
+              {/* Left: Days + Hours */}
+              <div className="p-5 md:p-6">
+                <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Dias e Horários</h2>
+                <div className="space-y-1">
+                  {WEEKDAY_ORDER.map(weekday => {
+                    const hour = getHour(weekday);
+                    if (!hour) return null;
+                    const isOpen = !hour.is_closed;
 
-                  <div className="space-y-1">
-                    {WEEKDAY_ORDER.map(weekday => {
-                      const hour = getHour(weekday);
-                      if (!hour) return null;
-                      const isOpen = !hour.is_closed;
-
-                      return (
-                        <div
-                          key={weekday}
-                          className={cn(
-                            "flex items-center gap-4 py-3 px-4 rounded-xl transition-colors group",
-                            isOpen ? "hover:bg-zinc-50" : "opacity-60 hover:bg-zinc-50"
-                          )}
-                        >
-                          {/* Checkbox */}
-                          <button
-                            onClick={() => updateHour(weekday, 'is_closed', isOpen)}
-                            className={cn(
-                              "w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition-all",
-                              isOpen
-                                ? "bg-blue-500 border-blue-500"
-                                : "border-zinc-300 bg-white"
-                            )}
-                          >
-                            {isOpen && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                          </button>
-
-                          {/* Nome do dia */}
-                          <span className={cn(
-                            "text-sm font-medium w-20 flex-shrink-0",
-                            isOpen ? "text-zinc-900" : "text-zinc-400"
-                          )}>
-                            {WEEKDAYS[weekday]}
-                          </span>
-
-                          {/* Horários */}
-                          {isOpen ? (
-                            <div className="flex items-center gap-2 flex-1">
-                              <div className="relative">
-                                <input
-                                  type="time"
-                                  value={hour.open_time}
-                                  onChange={(e) => updateHour(weekday, 'open_time', e.target.value)}
-                                  className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-[110px] font-medium"
-                                />
-                              </div>
-                              <span className="text-zinc-400 text-xs font-medium">às</span>
-                              <div className="relative">
-                                <input
-                                  type="time"
-                                  value={hour.close_time}
-                                  onChange={(e) => updateHour(weekday, 'close_time', e.target.value)}
-                                  className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all w-[110px] font-medium"
-                                />
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-zinc-400 flex-1">Fechado</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Coluna Direita: Intervalos */}
-                <div className="p-6 md:p-8">
-                  <h2 className="text-sm font-semibold text-zinc-900 mb-6">Intervalos</h2>
-
-                  <div className={cn(
-                    "rounded-xl border p-5 transition-all",
-                    hasBreak ? "border-zinc-200 bg-white" : "border-dashed border-zinc-200 bg-zinc-50/50"
-                  )}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-zinc-700">Horário de Almoço</span>
-                      {/* Toggle */}
-                      <button
-                        onClick={() => setHasBreak(!hasBreak)}
+                    return (
+                      <div
+                        key={weekday}
                         className={cn(
-                          "relative w-10 h-5 rounded-full transition-colors flex-shrink-0",
-                          hasBreak ? "bg-zinc-900" : "bg-zinc-200"
+                          "flex items-center gap-3 py-2.5 px-3 rounded-lg transition-colors group",
+                          isOpen ? "hover:bg-zinc-50" : "opacity-60 hover:bg-zinc-50"
                         )}
                       >
+                        <button
+                          onClick={() => updateHour(weekday, 'is_closed', isOpen)}
+                          className={cn(
+                            "w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border-2 transition-all",
+                            isOpen ? "bg-primary border-primary" : "border-zinc-300 bg-white"
+                          )}
+                        >
+                          {isOpen && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                        </button>
                         <span className={cn(
-                          "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all",
-                          hasBreak ? "left-5" : "left-0.5"
-                        )} />
-                      </button>
-                    </div>
-
-                    {hasBreak && (
-                      <div className="flex items-center gap-2 mt-4">
-                        <input
-                          type="time"
-                          value={breakStart}
-                          onChange={(e) => setBreakStart(e.target.value)}
-                          className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent w-[110px] font-medium"
-                        />
-                        <span className="text-zinc-400 text-xs font-medium">às</span>
-                        <input
-                          type="time"
-                          value={breakEnd}
-                          onChange={(e) => setBreakEnd(e.target.value)}
-                          className="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent w-[110px] font-medium"
-                        />
+                          "text-sm font-medium w-16 flex-shrink-0",
+                          isOpen ? "text-zinc-900" : "text-zinc-400"
+                        )}>
+                          {WEEKDAYS[weekday]}
+                        </span>
+                        {isOpen ? (
+                          <div className="flex items-center gap-2 flex-1 flex-wrap">
+                            <input
+                              type="time"
+                              value={hour.open_time}
+                              onChange={(e) => updateHour(weekday, 'open_time', e.target.value)}
+                              className="bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-[100px] font-medium"
+                            />
+                            <span className="text-zinc-400 text-xs">às</span>
+                            <input
+                              type="time"
+                              value={hour.close_time}
+                              onChange={(e) => updateHour(weekday, 'close_time', e.target.value)}
+                              className="bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-[100px] font-medium"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-xs text-zinc-400 flex-1">Fechado</span>
+                        )}
                       </div>
-                    )}
-
-                    <p className="text-xs text-zinc-400 mt-3 leading-relaxed">
-                      {hasBreak
-                        ? "Este intervalo será aplicado a todos os dias de funcionamento."
-                        : "Ative para configurar um intervalo de almoço global."}
-                    </p>
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Footer com botão */}
-              <div className="px-6 md:px-8 py-5 border-t border-zinc-100 flex justify-end">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={cn(
-                    "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm disabled:opacity-70",
-                    saved
-                      ? "bg-emerald-500 text-white"
-                      : "bg-zinc-900 text-white hover:bg-zinc-800"
+              {/* Right: Intervals */}
+              <div className="p-5 md:p-6">
+                <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">Intervalos</h2>
+                <div className={cn(
+                  "rounded-xl border p-4 transition-all",
+                  hasBreak ? "border-zinc-200 bg-white" : "border-dashed border-zinc-200 bg-zinc-50/50"
+                )}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-zinc-700">Horário de Almoço</span>
+                    <button
+                      onClick={() => setHasBreak(!hasBreak)}
+                      className={cn(
+                        "relative w-9 h-5 rounded-full transition-colors flex-shrink-0",
+                        hasBreak ? "bg-primary" : "bg-zinc-200"
+                      )}
+                    >
+                      <span className={cn(
+                        "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all",
+                        hasBreak ? "left-4" : "left-0.5"
+                      )} />
+                    </button>
+                  </div>
+                  {hasBreak && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <input
+                        type="time"
+                        value={breakStart}
+                        onChange={(e) => setBreakStart(e.target.value)}
+                        className="bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-primary w-[100px] font-medium"
+                      />
+                      <span className="text-zinc-400 text-xs">às</span>
+                      <input
+                        type="time"
+                        value={breakEnd}
+                        onChange={(e) => setBreakEnd(e.target.value)}
+                        className="bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-sm text-zinc-700 focus:ring-2 focus:ring-primary w-[100px] font-medium"
+                      />
+                    </div>
                   )}
-                >
-                  {saving
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Salvando...</>
-                    : saved
-                      ? <><Check className="w-4 h-4" /> Salvo!</>
-                      : <><Save className="w-4 h-4" /> Salvar Configurações</>
-                  }
-                </button>
+                  <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
+                    {hasBreak
+                      ? "Aplicado a todos os dias de funcionamento."
+                      : "Ative para configurar um intervalo de almoço."}
+                  </p>
+                </div>
               </div>
+
             </div>
-          </motion.div>
+          </div>
         </div>
       </main>
     </div>

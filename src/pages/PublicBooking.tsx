@@ -305,7 +305,6 @@ export default function PublicBooking() {
     e.preventDefault();
     if (!selectedSlot || !business) return;
 
-    // Get fresh session to ensure we have the user ID
     const { data: { session: currentSession } } = await supabase.auth.getSession();
     if (!currentSession?.user) {
       alert('Sessão expirada. Por favor, faça login novamente.');
@@ -320,93 +319,57 @@ export default function PublicBooking() {
         const fileExt = referenceFile.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `${business.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('references')
-          .upload(filePath, referenceFile);
-
+        const { error: uploadError } = await supabase.storage.from('references').upload(filePath, referenceFile);
         if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('references')
-          .getPublicUrl(filePath);
-
+        const { data: { publicUrl } } = supabase.storage.from('references').getPublicUrl(filePath);
         referenceImageUrl = publicUrl;
       }
 
-      // Update user metadata with phone
-      await supabase.auth.updateUser({
-        data: { phone: formData.phone }
-      });
-
-      let appointmentId = '';
+      await supabase.auth.updateUser({ data: { phone: formData.phone } });
 
       if (reschedulingAppointment) {
-        const { error } = await supabase
-          .from('appointments')
-          .update({
-            start_time: selectedSlot.start.toISOString(),
-            end_time: selectedSlot.end.toISOString(),
-            client_phone: formData.phone,
-            service_id: selectedService?.id || null, // Atualizado
-            professional_id: selectedProfessional?.id || null, // Atualizado
-            notes: formData.notes,
-            address: formData.address || null,
-            reference: formData.reference || null,
-            reference_image_url: referenceImageUrl || reschedulingAppointment.reference_image_url || null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', reschedulingAppointment.id);
-
+        const { error } = await supabase.from('appointments').update({
+          start_time: selectedSlot.start.toISOString(),
+          end_time: selectedSlot.end.toISOString(),
+          client_phone: formData.phone,
+          service_id: selectedService?.id || null,
+          professional_id: selectedProfessional?.id || null,
+          notes: formData.notes,
+          address: formData.address || null,
+          reference: formData.reference || null,
+          reference_image_url: referenceImageUrl || reschedulingAppointment.reference_image_url || null,
+          updated_at: new Date().toISOString()
+        }).eq('id', reschedulingAppointment.id);
         if (error) throw error;
-        appointmentId = reschedulingAppointment.id;
       } else {
-        const { data, error } = await supabase
-          .from('appointments')
-          .insert({
-            business_id: business.id,
-            client_id: currentSession.user.id,
-            client_name: formData.name,
-            client_email: formData.email,
-            client_phone: formData.phone,
-            service_id: selectedService?.id || null, // Atualizado
-            professional_id: selectedProfessional?.id || null, // Atualizado
-            notes: formData.notes,
-            address: formData.address || null,
-            reference: formData.reference || null,
-            reference_image_url: referenceImageUrl,
-            start_time: selectedSlot.start.toISOString(),
-            end_time: selectedSlot.end.toISOString(),
-            status: 'confirmed'
-          })
-          .select()
-          .single();
-
+        const { error } = await supabase.from('appointments').insert({
+          business_id: business.id,
+          client_id: currentSession.user.id,
+          client_name: formData.name,
+          client_email: formData.email,
+          client_phone: formData.phone,
+          service_id: selectedService?.id || null,
+          professional_id: selectedProfessional?.id || null,
+          notes: formData.notes,
+          address: formData.address || null,
+          reference: formData.reference || null,
+          reference_image_url: referenceImageUrl,
+          start_time: selectedSlot.start.toISOString(),
+          end_time: selectedSlot.end.toISOString(),
+          status: 'confirmed'
+        });
         if (error) throw error;
-        appointmentId = data.id;
       }
 
-      // Refresh user appointments list immediately
-      const { data: updatedApps } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('business_id', business.id)
-        .eq('client_id', currentSession.user.id)
-        .neq('status', 'cancelled')
-        .gte('start_time', new Date().toISOString())
+      // Refresh user appointments
+      const { data: updatedApps } = await supabase.from('appointments').select('*')
+        .eq('business_id', business.id).eq('client_id', currentSession.user.id)
+        .neq('status', 'cancelled').gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true });
-
       if (updatedApps) setUserAppointments(updatedApps);
 
-      setStep('date');
       setReschedulingAppointment(null);
-      setSelectedSlot(null);
-
-      // Scroll to my appointments section
-      setTimeout(() => {
-        const el = document.getElementById('my-appointments');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 300);
+      setStep('success');
     } catch (err: any) {
       alert('Erro ao realizar agendamento: ' + err.message);
     } finally {
@@ -414,9 +377,18 @@ export default function PublicBooking() {
     }
   };
 
+  // Step progress indicator
+  const STEPS = [
+    { id: 'service', label: 'Serviço' },
+    { id: 'professional', label: 'Profissional' },
+    { id: 'date', label: 'Data & Horário' },
+    { id: 'form', label: 'Seus dados' },
+  ];
+  const currentStepIdx = STEPS.findIndex(s => s.id === step);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
@@ -425,47 +397,87 @@ export default function PublicBooking() {
   if (error || !business) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-zinc-50">
-        <div className="bg-white p-10 rounded-xl shadow-xl max-w-md text-center border border-zinc-200">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-sans font-semibold mb-2 text-zinc-900">{error || 'Algo deu errado'}</h2>
-          <p className="text-zinc-500">O link que você acessou pode estar incorreto ou o negócio não existe mais.</p>
+        <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md text-center border border-zinc-100">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2 text-zinc-900">{error || 'Algo deu errado'}</h2>
+          <p className="text-zinc-500 text-sm">O link pode estar incorreto ou o negócio não existe.</p>
         </div>
       </div>
     );
   }
 
+  // Brand color from business
+  const brandColor = business.primary_color || '#18181b';
+
   return (
-    <div
-      className="min-h-screen py-8 md:py-12 px-4 md:px-6 bg-zinc-50"
-    >
-      <div className="max-w-4xl mx-auto">
-        {/* Business Header */}
-        <header className="text-center mb-10 md:mb-16 relative">
+    <div className="min-h-screen bg-zinc-50" style={{ '--primary': brandColor } as any}>
+      {/* Top brand bar */}
+      <div className="bg-white border-b border-zinc-100 sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {business.logo_url ? (
+              <img src={business.logo_url} alt={business.name} className="w-8 h-8 rounded-lg object-cover" />
+            ) : (
+              <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center">
+                <CalendarIcon className="w-4 h-4 text-white" />
+              </div>
+            )}
+            <span className="text-sm font-bold text-zinc-900 capitalize">{business.name}</span>
+          </div>
           {session && (
-            <div className="absolute -top-4 right-0 flex items-center gap-2 text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400">
-              <span className="text-zinc-900">{formData.name || session.user.email}</span>
-              <button
-                onClick={handleSignOut}
-                className="underline hover:text-zinc-900 transition-colors"
-              >
+            <div className="flex items-center gap-2 text-xs text-zinc-400">
+              <span className="hidden sm:inline font-medium text-zinc-600">{formData.name || session.user.email}</span>
+              <button onClick={handleSignOut} className="text-zinc-400 hover:text-zinc-700 transition-colors underline">
                 Sair
               </button>
             </div>
           )}
-          {business.logo_url ? (
-            <img src={business.logo_url} alt={business.name} className="w-20 h-20 md:w-24 md:h-24 rounded-xl mx-auto mb-4 md:mb-6 shadow-md object-cover" referrerPolicy="no-referrer" />
-          ) : (
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-xl shadow-primary/10">
-              <CalendarIcon className="text-white w-8 h-8 md:w-10 md:h-10" />
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Hero */}
+        {!hasConfirmedAuth && (
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-zinc-900 mb-1 capitalize">{business.name}</h1>
+            <p className="text-zinc-500 text-sm">{business.description || 'Agende seu horário de forma simples e rápida.'}</p>
+          </div>
+        )}
+
+        {/* Step progress bar (only after auth) */}
+        {hasConfirmedAuth && step !== 'success' && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              {STEPS.map((s, i) => (
+                <div key={s.id} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                      i < currentStepIdx ? "bg-emerald-500 text-white" :
+                      i === currentStepIdx ? "bg-zinc-900 text-white ring-4 ring-zinc-900/10" :
+                      "bg-zinc-100 text-zinc-400"
+                    )}>
+                      {i < currentStepIdx ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-semibold mt-1 text-center hidden sm:block",
+                      i === currentStepIdx ? "text-zinc-900" : "text-zinc-400"
+                    )}>{s.label}</span>
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div className={cn(
+                      "flex-1 h-0.5 mx-1 rounded-full transition-all",
+                      i < currentStepIdx ? "bg-emerald-400" : "bg-zinc-100"
+                    )} />
+                  )}
+                </div>
+              ))}
             </div>
-          )}
-          <h1 className="text-3xl md:text-5xl font-display font-bold text-zinc-900 mb-4 capitalize tracking-tight">{business.name}</h1>
-          <p className="text-zinc-500 max-w-lg mx-auto leading-relaxed">
-            {business.description || "Agende seu horário de forma simples e rápida."}
-          </p>
-        </header>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
+          {/* AUTH */}
           {(step === 'auth' || !hasConfirmedAuth) && (
             <ClientBookingAuth
               onSuccess={handleAuthSuccess}
@@ -476,462 +488,462 @@ export default function PublicBooking() {
             />
           )}
 
-          {step === 'date' && hasConfirmedAuth && (
-            <div className="space-y-12">
-              {/* User Appointments Section */}
-              <motion.div
-                id="my-appointments"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-zinc-100"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-sans font-semibold text-zinc-900">Seus Agendamentos</h2>
-                  <div className="px-3 py-1 bg-zinc-50 rounded-lg text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 border border-zinc-100">
-                    {userAppointments.length} {userAppointments.length === 1 ? 'Agendamento' : 'Agendamentos'}
-                  </div>
+          {/* STEP 1: SERVICE */}
+          {step === 'service' && hasConfirmedAuth && (
+            <motion.div key="service" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-zinc-900">Escolha o serviço</h2>
+                <p className="text-sm text-zinc-500">O que você deseja realizar?</p>
+              </div>
+              {services.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-dashed border-zinc-200 p-10 text-center">
+                  <AlertCircle className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
+                  <p className="text-sm text-zinc-400">Nenhum serviço cadastrado.</p>
                 </div>
-
-                {loadingUserAppointments ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-zinc-200" />
-                  </div>
-                ) : userAppointments.length > 0 ? (
-                  <div className="space-y-4">
-                    {userAppointments.map((app) => (
-                      <div key={app.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-zinc-50 rounded-lg gap-4 border border-zinc-100">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
-                            <CalendarIcon className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-zinc-900">{format(parseISO(app.start_time), "EEEE, d 'de' MMMM", { locale: ptBR })}</p>
-                            <p className="text-sm text-zinc-500">{format(parseISO(app.start_time), "HH:mm")}</p>
-                          </div>
+              ) : (
+                <div className="space-y-2">
+                  {services.map(service => (
+                    <button
+                      key={service.id}
+                      onClick={() => handleServiceSelect(service)}
+                      className="w-full group flex items-center justify-between p-4 bg-white rounded-xl border border-zinc-200 hover:border-zinc-900 hover:shadow-md transition-all text-left"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-zinc-900">{service.name}</h3>
+                          {service.price !== null && Number(service.price) > 0 && (
+                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              R$ {Number(service.price).toFixed(2).replace('.', ',')}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleRescheduleClick(app)}
-                            className="flex-1 md:flex-none px-4 py-2 bg-white text-zinc-600 rounded-lg text-sm font-sans font-semibold hover:text-zinc-900 transition-colors border border-zinc-200 shadow-sm"
-                          >
-                            Agendar Novamente
-                          </button>
-                          <button
-                            onClick={() => handleCancelAppointment(app.id)}
-                            className="flex-1 md:flex-none px-4 py-2 bg-red-50 text-red-500 rounded-lg text-sm font-sans font-semibold hover:bg-red-100 transition-colors"
-                          >
-                            Cancelar
-                          </button>
+                        <div className="flex items-center gap-1 mt-1 text-xs text-zinc-400">
+                          <Clock className="w-3 h-3" />
+                          <span>{service.duration_minutes} min</span>
+                          {service.description && <><span className="mx-1">·</span><span className="truncate max-w-[200px]">{service.description}</span></>}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 bg-zinc-50/50 rounded-lg border border-dashed border-zinc-200">
-                    <p className="text-zinc-400 text-sm">Você ainda não possui agendamentos marcados.</p>
-                  </div>
-                )}
-              </motion.div>
-
-              {reschedulingAppointment && (
-                <div className="bg-[var(--primary-color)] text-white p-4 rounded-xl flex items-center justify-between">
-                  <p className="text-sm font-medium">
-                    Novo agendamento baseado em {format(parseISO(reschedulingAppointment.start_time), "d/MM 'às' HH:mm")}
-                  </p>
-                  <button
-                    onClick={() => setReschedulingAppointment(null)}
-                    className="text-xs font-sans font-semibold underline"
-                  >
-                    Cancelar
-                  </button>
+                      <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-zinc-900 transition-colors flex-shrink-0" />
+                    </button>
+                  ))}
                 </div>
               )}
 
-              <motion.div
-                key="date"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
-              >
-                {/* Calendar Section */}
-                <div className="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-zinc-100">
-                  <div className="flex items-center justify-between mb-6 md:mb-8">
-                    <h2 className="text-lg md:text-xl font-sans font-semibold text-zinc-900">Selecione o Dia</h2>
-                    <div className="flex gap-2">
+              {/* My appointments section */}
+              {userAppointments.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Seus Agendamentos</h3>
+                  <div className="space-y-2">
+                    {userAppointments.map(app => (
+                      <div key={app.id} className="bg-white rounded-xl border border-zinc-200 p-4 flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-semibold text-zinc-900 text-sm capitalize">
+                            {format(parseISO(app.start_time), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                          </p>
+                          <p className="text-xs text-zinc-500">{format(parseISO(app.start_time), 'HH:mm')}</p>
+                        </div>
+                        <button
+                          onClick={() => handleCancelAppointment(app.id)}
+                          className="text-xs text-red-500 hover:text-red-700 font-semibold"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* STEP 2: PROFESSIONAL */}
+          {step === 'professional' && hasConfirmedAuth && selectedService && (
+            <motion.div key="professional" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <button onClick={() => setStep('service')} className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-700 text-sm font-medium mb-5 transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Voltar
+              </button>
+              <div className="mb-5">
+                <div className="inline-flex items-center gap-2 bg-zinc-100 rounded-lg px-3 py-1.5 mb-3">
+                  <Scissors className="w-3.5 h-3.5 text-zinc-500" />
+                  <span className="text-xs font-semibold text-zinc-700">{selectedService.name}</span>
+                </div>
+                <h2 className="text-lg font-bold text-zinc-900">Escolha o profissional</h2>
+                <p className="text-sm text-zinc-500">Quem realizará seu atendimento?</p>
+              </div>
+
+              {(() => {
+                const available = professionals.filter(prof =>
+                  profServicesData.some(ps => ps.professional_id === prof.id && ps.service_id === selectedService.id)
+                );
+                if (available.length === 0) return (
+                  <div className="bg-amber-50 rounded-xl border border-amber-100 p-6 text-center">
+                    <p className="text-sm text-amber-700">Nenhum profissional disponível para este serviço.</p>
+                    <button onClick={() => setStep('service')} className="mt-3 text-xs font-semibold text-amber-700 underline">
+                      Escolher outro serviço
+                    </button>
+                  </div>
+                );
+                return (
+                  <div className="space-y-2">
+                    {available.map(prof => (
                       <button
-                        onClick={() => setSelectedDate(addDays(selectedDate, -7))}
-                        className="p-2 hover:bg-zinc-50 rounded-full transition-colors"
+                        key={prof.id}
+                        onClick={() => handleProfessionalSelect(prof)}
+                        className="w-full group flex items-center gap-4 p-4 bg-white rounded-xl border border-zinc-200 hover:border-zinc-900 hover:shadow-md transition-all text-left"
                       >
-                        <ChevronLeft className="w-5 h-5 text-zinc-400" />
+                        {prof.avatar_url ? (
+                          <img src={prof.avatar_url} alt={prof.name} className="w-11 h-11 rounded-full object-cover bg-zinc-100 flex-shrink-0" />
+                        ) : (
+                          <div className="w-11 h-11 rounded-full bg-zinc-100 flex items-center justify-center font-bold text-zinc-500 text-base flex-shrink-0">
+                            {prof.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-zinc-900">{prof.name}</h3>
+                          {prof.bio && <p className="text-xs text-zinc-500 truncate">{prof.bio}</p>}
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-zinc-900 transition-colors flex-shrink-0" />
                       </button>
-                      <button
-                        onClick={() => setSelectedDate(addDays(selectedDate, 7))}
-                        className="p-2 hover:bg-zinc-50 rounded-full transition-colors"
-                      >
-                        <ChevronRight className="w-5 h-5 text-zinc-400" />
+                    ))}
+                  </div>
+                );
+              })()}
+            </motion.div>
+          )}
+
+          {/* STEP 3: DATE + TIME */}
+          {step === 'date' && hasConfirmedAuth && (
+            <motion.div key="date" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <button onClick={() => setStep('professional')} className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-700 text-sm font-medium mb-5 transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Voltar
+              </button>
+              <div className="mb-5">
+                <div className="flex items-center gap-2 flex-wrap mb-3">
+                  {selectedService && (
+                    <div className="inline-flex items-center gap-1.5 bg-zinc-100 rounded-lg px-3 py-1.5">
+                      <Scissors className="w-3 h-3 text-zinc-500" />
+                      <span className="text-xs font-semibold text-zinc-700">{selectedService.name}</span>
+                    </div>
+                  )}
+                  {selectedProfessional && (
+                    <div className="inline-flex items-center gap-1.5 bg-zinc-100 rounded-lg px-3 py-1.5">
+                      <User className="w-3 h-3 text-zinc-500" />
+                      <span className="text-xs font-semibold text-zinc-700">{selectedProfessional.name.split(' ')[0]}</span>
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-lg font-bold text-zinc-900">Escolha a data e horário</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Date picker */}
+                <div className="bg-white rounded-xl border border-zinc-200 p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Data</h3>
+                    <div className="flex gap-1">
+                      <button onClick={() => setSelectedDate(addDays(selectedDate, -7))} className="p-1.5 hover:bg-zinc-50 rounded-lg transition-colors">
+                        <ChevronLeft className="w-4 h-4 text-zinc-400" />
+                      </button>
+                      <button onClick={() => setSelectedDate(addDays(selectedDate, 7))} className="p-1.5 hover:bg-zinc-50 rounded-lg transition-colors">
+                        <ChevronRight className="w-4 h-4 text-zinc-400" />
                       </button>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-7 gap-1 md:gap-2 text-center text-[10px] font-sans font-medium text-zinc-300 mb-4">
+                  <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-zinc-300 mb-2">
                     {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => <div key={`${d}-${i}`}>{d}</div>)}
                   </div>
-
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {Array.from({ length: 14 }).map((_, i) => {
                       const date = addDays(startOfToday(), i);
                       const isSelected = isSameDay(date, selectedDate);
                       const isPast = isBefore(date, startOfToday());
-
                       return (
                         <button
                           key={i}
                           disabled={isPast}
                           onClick={() => setSelectedDate(date)}
                           className={cn(
-                            "aspect-square rounded-lg md:rounded-xl flex flex-col items-center justify-center transition-all",
-                            isSelected ? "bg-[var(--primary-color)] text-white shadow-lg scale-105" : "hover:bg-black/5",
+                            "aspect-square rounded-lg flex flex-col items-center justify-center transition-all",
+                            isSelected ? "bg-zinc-900 text-white shadow-md scale-105" : "hover:bg-zinc-50 text-zinc-600",
                             isPast && "opacity-20 cursor-not-allowed"
                           )}
                         >
-                          <span className="text-[8px] md:text-[10px] font-sans font-medium uppercase opacity-60 mb-0.5 md:mb-1">
-                            {format(date, 'EEE', { locale: ptBR })}
-                          </span>
-                          <span className="text-sm md:text-lg font-sans font-semibold">{format(date, 'd')}</span>
+                          <span className="text-[8px] font-bold uppercase opacity-60">{format(date, 'EEE', { locale: ptBR })}</span>
+                          <span className="text-sm font-bold">{format(date, 'd')}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Slots Section */}
-                <div className="bg-white p-6 md:p-8 rounded-xl shadow-xl border border-zinc-100">
-                  <h2 className="text-lg md:text-xl font-sans font-semibold mb-6 md:mb-8 text-zinc-900">Horários Disponíveis</h2>
-
+                {/* Time slots */}
+                <div className="bg-white rounded-xl border border-zinc-200 p-4">
+                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">
+                    Horários — {format(selectedDate, "dd/MM", { locale: ptBR })}
+                  </h3>
                   {loadingSlots ? (
-                    <div className="flex flex-col items-center justify-center h-48 md:h-64 text-zinc-200">
-                      <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                      <p className="text-sm font-medium text-zinc-400">Buscando horários...</p>
+                    <div className="flex items-center justify-center h-40">
+                      <Loader2 className="w-6 h-6 animate-spin text-zinc-300" />
                     </div>
                   ) : availableSlots.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3 max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
                       {availableSlots.map((slot, i) => (
                         <button
                           key={i}
                           onClick={() => handleSlotSelect(slot)}
-                          className="p-3 md:p-4 bg-zinc-50 rounded-lg text-center font-sans font-semibold hover:bg-primary hover:text-white transition-all group border border-zinc-100 shadow-sm hover:shadow-lg hover:shadow-primary/20"
+                          className="p-3 bg-zinc-50 rounded-lg text-center font-semibold text-sm hover:bg-zinc-900 hover:text-white transition-all border border-zinc-100 hover:border-zinc-900 hover:shadow-md"
                         >
-                          <Clock className="w-4 h-4 mx-auto mb-1 md:mb-2 opacity-20 group-hover:opacity-100 transition-opacity" />
-                          <span className="text-sm md:text-base">{format(slot.start, 'HH:mm')}</span>
+                          {format(slot.start, 'HH:mm')}
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-48 md:h-64 text-center">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4 border border-zinc-100">
-                        <Clock className="w-6 h-6 md:w-8 md:h-8 text-zinc-200" />
-                      </div>
-                      <p className="text-zinc-400 text-sm md:text-base font-medium">Nenhum horário disponível para este dia.</p>
+                    <div className="flex flex-col items-center justify-center h-40 text-center">
+                      <Clock className="w-8 h-8 text-zinc-200 mb-2" />
+                      <p className="text-sm text-zinc-400">Nenhum horário disponível</p>
+                      <p className="text-xs text-zinc-300">Tente outro dia</p>
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          )}
-
-          {/* NOVO: Passo de Serviço */}
-          {step === 'service' && hasConfirmedAuth && (
-            <motion.div
-              key="service-step"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="max-w-xl mx-auto"
-            >
-              <div className="bg-white rounded-xl p-6 md:p-8 shadow-xl border border-zinc-100">
-                <h2 className="text-xl md:text-2xl font-display font-semibold text-zinc-900 mb-2">1. Escolha o serviço</h2>
-                <p className="text-zinc-500 mb-6 text-sm">Selecione o que você deseja realizar hoje.</p>
-
-                {services.length === 0 ? (
-                  <div className="text-center p-6 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
-                    <AlertCircle className="w-8 h-8 text-zinc-400 mx-auto mb-2" />
-                    <p className="text-sm text-zinc-500">Nenhum serviço cadastrado no momento.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {services.map(service => (
-                      <button
-                        key={service.id}
-                        onClick={() => handleServiceSelect(service)}
-                        className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-200 hover:border-[var(--primary-color)] hover:shadow-md transition-all group text-left bg-white"
-                      >
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-zinc-900">{service.name}</h3>
-                          <div className="flex gap-3 mt-1">
-                            <span className="text-xs font-medium text-zinc-500 flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> {service.duration_minutes} min
-                            </span>
-                            {service.price !== null && (
-                              <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                                R$ {Number(service.price).toFixed(2).replace('.', ',')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[var(--primary-color)] transition-colors" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* NOVO: Passo de Colaborador */}
-          {step === 'professional' && hasConfirmedAuth && selectedService && (
-            <motion.div
-              key="professional-step"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="max-w-xl mx-auto"
-            >
-              <div className="bg-white rounded-xl p-6 md:p-8 shadow-xl border border-zinc-100">
-                <button
-                  onClick={() => setStep('service')}
-                  className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6 text-sm font-medium"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Trocar serviço ({selectedService.name})
-                </button>
-
-                <h2 className="text-xl md:text-2xl font-display font-semibold text-zinc-900 mb-2">2. Escolha o profissional</h2>
-                <p className="text-zinc-500 mb-6 text-sm">Quem você deseja que realize o atendimento?</p>
-
-                <div className="space-y-3">
-                  {/* O "Qualquer profissional" pega o primeiro, ou podemos criar lógic a complexa, mas vamos obrigar escolha neste momento */}
-                  {professionals
-                    .filter(prof => profServicesData.some(ps => ps.professional_id === prof.id && ps.service_id === selectedService.id))
-                    .length === 0 ? (
-                    <div className="text-center p-6 bg-amber-50 rounded-xl border border-amber-100">
-                      <p className="text-sm text-amber-700">Nenhum profissional atende este serviço no momento.</p>
-                    </div>
-                  ) : (
-                    professionals
-                      .filter(prof => profServicesData.some(ps => ps.professional_id === prof.id && ps.service_id === selectedService.id))
-                      .map(prof => (
-                        <button
-                          key={prof.id}
-                          onClick={() => handleProfessionalSelect(prof)}
-                          className="w-full flex items-center justify-between p-4 rounded-xl border border-zinc-200 hover:border-[var(--primary-color)] hover:shadow-md transition-all group text-left bg-white"
-                        >
-                          <div className="flex items-center gap-4">
-                            {prof.avatar_url ? (
-                              <img src={prof.avatar_url} alt={prof.name} className="w-12 h-12 rounded-full object-cover bg-zinc-100" />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center font-medium text-zinc-500 text-lg">
-                                {prof.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <div>
-                              <h3 className="font-semibold text-zinc-900">{prof.name}</h3>
-                              {prof.bio && <p className="text-xs text-zinc-500 mt-0.5 line-clamp-1">{prof.bio}</p>}
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-[var(--primary-color)] transition-colors" />
-                        </button>
-                      ))
                   )}
                 </div>
               </div>
             </motion.div>
           )}
 
+          {/* STEP 4: FORM */}
           {step === 'form' && selectedSlot && selectedService && selectedProfessional && (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="max-w-xl mx-auto"
-            >
-              <div className="bg-white rounded-xl p-6 md:p-10 shadow-xl border border-zinc-100">
-                <button
-                  onClick={() => setStep('date')}
-                  className="flex items-center gap-2 text-zinc-400 hover:text-zinc-900 transition-colors mb-6 md:mb-8 text-sm font-medium"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Alterar data ou horário
-                </button>
+            <motion.div key="form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <button onClick={() => setStep('date')} className="flex items-center gap-1.5 text-zinc-400 hover:text-zinc-700 text-sm font-medium mb-5 transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Voltar
+              </button>
 
-                <div className="flex border border-zinc-100 rounded-lg overflow-hidden mb-8 shadow-sm">
-                  <div className="bg-zinc-50 p-4 border-r border-zinc-100 flex-1 flex flex-col items-center justify-center text-center">
-                    <Scissors className="w-5 h-5 text-zinc-400 mb-1" />
-                    <p className="font-semibold text-zinc-900 text-sm whitespace-nowrap overflow-hidden text-ellipsis w-[100px]">{selectedService.name}</p>
+              {/* Summary card */}
+              <div className="bg-zinc-900 rounded-2xl p-5 mb-6 text-white">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-3">Resumo do agendamento</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <p className="text-[10px] text-zinc-500 mb-0.5">Serviço</p>
+                    <p className="text-sm font-bold truncate">{selectedService.name}</p>
                   </div>
-                  <div className="bg-zinc-50 p-4 border-r border-zinc-100 flex-1 flex flex-col items-center justify-center text-center">
-                    <User className="w-5 h-5 text-zinc-400 mb-1" />
-                    <p className="font-semibold text-zinc-900 text-sm truncate whitespace-nowrap overflow-hidden text-ellipsis w-[100px]">{selectedProfessional.name.split(' ')[0]}</p>
+                  <div>
+                    <p className="text-[10px] text-zinc-500 mb-0.5">Profissional</p>
+                    <p className="text-sm font-bold truncate">{selectedProfessional.name.split(' ')[0]}</p>
                   </div>
-                  <div className="bg-[var(--primary-color)] text-white p-4 flex-1 flex flex-col items-center justify-center text-center">
-                    <Clock className="w-5 h-5 mb-1 opacity-80" />
-                    <p className="font-bold text-sm whitespace-nowrap">{format(selectedSlot.start, "dd/MM - HH:mm")}</p>
+                  <div>
+                    <p className="text-[10px] text-zinc-500 mb-0.5">Data & Hora</p>
+                    <p className="text-sm font-bold">{format(selectedSlot.start, "dd/MM 'às' HH:mm", { locale: ptBR })}</p>
                   </div>
                 </div>
+              </div>
 
-                <form onSubmit={handleBooking} className="space-y-6">
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-zinc-900">Seus dados</h2>
+                <p className="text-sm text-zinc-500">Confirme seus dados para finalizar.</p>
+              </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Seu Nome</label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
-                        placeholder="Nome completo"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Telefone</label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                      <input
-                        type="tel"
-                        required
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
-                        placeholder="(00) 00000-0000"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Observações (opcional)</label>
-                    <textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 px-4 focus:ring-2 focus:ring-primary transition-all min-h-[100px] text-zinc-900"
-                      placeholder="Alguma informação adicional?"
+              <form onSubmit={handleBooking} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Nome completo</label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
+                    <input
+                      type="text" required value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-white border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all"
+                      placeholder="Seu nome"
                     />
                   </div>
+                </div>
 
-                  {business.show_address && (
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Endereço de Atendimento</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
-                        <input
-                          type="text"
-                          required
-                          value={formData.address}
-                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          className="w-full bg-zinc-50 border border-zinc-100 rounded-lg py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
-                          placeholder="Rua, número, bairro..."
-                        />
-                      </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Telefone</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
+                    <input
+                      type="tel" required value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-white border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all"
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Observações <span className="text-zinc-300 normal-case font-normal">(opcional)</span></label>
+                  <textarea
+                    value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full bg-white border border-zinc-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all min-h-[80px] resize-none"
+                    placeholder="Alguma informação adicional?"
+                  />
+                </div>
+
+                {business.show_address && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Endereço de atendimento</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-300" />
+                      <input
+                        type="text" required value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="w-full bg-white border border-zinc-200 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all"
+                        placeholder="Rua, número, bairro..."
+                      />
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {business.show_reference && (
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 ml-1">Foto de Referência (opcional)</label>
-                      <div className="relative group">
-                        <div className={cn(
-                          "w-full rounded-xl bg-zinc-50 border-2 border-dashed border-zinc-200 transition-all overflow-hidden flex flex-col items-center justify-center min-h-[120px] relative",
-                          referenceFile ? "p-4" : "p-6",
-                          !referenceFile && "hover:bg-zinc-100 hover:border-primary/50 cursor-pointer"
-                        )}>
-                          {referenceFile ? (
-                            <div className="relative w-full h-full flex flex-col items-center gap-2">
-                              <div className="relative w-full flex justify-center">
-                                <img
-                                  src={URL.createObjectURL(referenceFile)}
-                                  alt="Referência"
-                                  className="max-h-[150px] rounded-lg shadow-sm"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setReferenceFile(null)}
-                                  className="absolute top-0 right-1/2 translate-x-[80px] p-1 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                              <p className="text-[10px] text-zinc-400 font-medium truncate max-w-[200px]">{referenceFile.name}</p>
+                {business.show_reference && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Foto de referência <span className="text-zinc-300 normal-case font-normal">(opcional)</span></label>
+                    <div className="relative">
+                      <div className={cn(
+                        "w-full rounded-xl bg-zinc-50 border-2 border-dashed border-zinc-200 transition-all overflow-hidden flex flex-col items-center justify-center min-h-[100px] relative hover:bg-zinc-100 cursor-pointer",
+                        referenceFile && "p-3"
+                      )}>
+                        {referenceFile ? (
+                          <div className="flex items-center gap-3 w-full">
+                            <img src={URL.createObjectURL(referenceFile)} alt="Ref" className="w-14 h-14 rounded-lg object-cover" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-zinc-700 truncate">{referenceFile.name}</p>
                             </div>
-                          ) : (
-                            <>
-                              <Upload className="w-6 h-6 text-zinc-300 mb-2" />
-                              <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-center">Enviar Foto de Referência</p>
-                              <p className="text-[10px] text-zinc-400 mt-1 text-center">Mostre o estilo que você deseja (opcional).</p>
-                            </>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => setReferenceFile(e.target.files?.[0] || null)}
-                            className="absolute inset-0 opacity-0 cursor-pointer"
-                          />
-                        </div>
+                            <button type="button" onClick={() => setReferenceFile(null)} className="p-1.5 bg-red-100 text-red-500 rounded-lg hover:bg-red-200">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5 text-zinc-300 mb-1.5" />
+                            <p className="text-xs text-zinc-400 font-medium">Enviar foto de referência</p>
+                          </>
+                        )}
+                        <input type="file" accept="image/*" onChange={(e) => setReferenceFile(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  <button
-                    type="submit"
-                    disabled={booking}
-                    className="w-full bg-primary text-white py-5 rounded-lg font-sans font-semibold hover:bg-zinc-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {booking ? <Loader2 className="w-5 h-5 animate-spin" /> : (
-                      reschedulingAppointment ? 'Confirmar Novo Horário' : 'Confirmar Agendamento'
-                    )}
-                  </button>
-                </form>
-              </div>
+                <button
+                  type="submit" disabled={booking}
+                  className="w-full bg-zinc-900 text-white py-4 rounded-xl font-bold hover:bg-black transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-70 mt-2"
+                >
+                  {booking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  {booking ? 'Confirmando...' : reschedulingAppointment ? 'Confirmar Novo Horário' : 'Confirmar Agendamento'}
+                </button>
+              </form>
             </motion.div>
           )}
 
-          {step === 'success' && (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-md mx-auto text-center"
-            >
-              <div className="bg-white rounded-xl p-8 md:p-12 shadow-2xl border border-zinc-100">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-emerald-50 rounded-lg flex items-center justify-center mx-auto mb-6 md:mb-8">
-                  <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12 text-emerald-500" />
+          {/* STEP 5: SUCCESS (Receipt/Voucher) */}
+          {step === 'success' && selectedService && selectedProfessional && selectedSlot && (
+            <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+              {/* Confetti-like header */}
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-9 h-9 text-emerald-600" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-display font-bold text-zinc-900 mb-4">
-                  {reschedulingAppointment ? 'Horário Alterado!' : 'Tudo pronto!'}
-                </h2>
-                <p className="text-zinc-500 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
-                  {reschedulingAppointment
-                    ? `Seu agendamento em ${business.name} foi alterado com sucesso.`
-                    : `Seu agendamento para ${business.name} foi confirmado com sucesso.`
-                  }
-                </p>
-                <div className="bg-zinc-50 p-6 rounded-lg mb-8 text-left border border-zinc-100">
-                  <p className="text-[10px] font-sans font-medium uppercase tracking-widest text-zinc-400 mb-2">Resumo</p>
-                  <p className="font-semibold text-sm md:text-base text-zinc-900">
-                    {selectedSlot ? format(selectedSlot.start, "EEEE, d 'de' MMMM", { locale: ptBR }) : 'Horário não selecionado'}
-                  </p>
-                  <p className="text-xl md:text-2xl font-display font-bold text-primary">
-                    {selectedSlot ? format(selectedSlot.start, "HH:mm") : '--:--'}
-                  </p>
+                <h2 className="text-2xl font-bold text-zinc-900">Agendamento Confirmado!</h2>
+                <p className="text-zinc-500 text-sm mt-1">Sua reserva foi realizada com sucesso.</p>
+              </div>
+
+              {/* Receipt/Voucher card */}
+              <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-xl">
+                {/* Receipt header */}
+                <div className="bg-zinc-900 px-6 py-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Comprovante</p>
+                      <h3 className="text-white font-bold text-lg mt-0.5 capitalize">{business.name}</h3>
+                    </div>
+                    {business.logo_url && (
+                      <img src={business.logo_url} alt={business.name} className="w-12 h-12 rounded-xl object-cover opacity-90" />
+                    )}
+                  </div>
                 </div>
+
+                {/* Dashed divider */}
+                <div className="border-t border-dashed border-zinc-200 mx-6" />
+
+                {/* Receipt body */}
+                <div className="px-6 py-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Data</p>
+                      <p className="text-sm font-bold text-zinc-900 capitalize">
+                        {format(selectedSlot.start, "EEEE", { locale: ptBR })}
+                      </p>
+                      <p className="text-sm font-bold text-zinc-900">
+                        {format(selectedSlot.start, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Horário</p>
+                      <p className="text-2xl font-bold text-zinc-900">{format(selectedSlot.start, 'HH:mm')}</p>
+                      <p className="text-xs text-zinc-500">até {format(selectedSlot.end, 'HH:mm')}</p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-zinc-100" />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Serviço</p>
+                      <p className="text-sm font-bold text-zinc-900">{selectedService.name}</p>
+                      <p className="text-xs text-zinc-500">{selectedService.duration_minutes} min</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Profissional</p>
+                      <p className="text-sm font-bold text-zinc-900">{selectedProfessional.name}</p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-zinc-100" />
+
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Cliente</p>
+                    <p className="text-sm font-bold text-zinc-900">{formData.name}</p>
+                    {formData.phone && <p className="text-xs text-zinc-500">{formData.phone}</p>}
+                  </div>
+
+                  {selectedService.price !== null && Number(selectedService.price) > 0 && (
+                    <>
+                      <div className="h-px bg-zinc-100" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-zinc-500">Valor do serviço</span>
+                        <span className="text-xl font-bold text-zinc-900">
+                          R$ {Number(selectedService.price).toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Receipt footer */}
+                <div className="bg-zinc-50 border-t border-dashed border-zinc-200 px-6 py-4 flex items-center justify-between">
+                  <p className="text-[10px] text-zinc-400">Status</p>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    Confirmado
+                  </span>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="mt-4 grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => window.location.reload()}
-                  className="text-primary font-sans font-semibold hover:underline text-sm md:text-base"
+                  onClick={() => {
+                    setStep('service');
+                    setSelectedService(null);
+                    setSelectedProfessional(null);
+                    setSelectedSlot(null);
+                  }}
+                  className="bg-white border border-zinc-200 text-zinc-700 py-3 rounded-xl font-semibold text-sm hover:bg-zinc-50 transition-all"
                 >
-                  Realizar outro agendamento
+                  Novo Agendamento
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="bg-zinc-900 text-white py-3 rounded-xl font-semibold text-sm hover:bg-black transition-all"
+                >
+                  Finalizar
                 </button>
               </div>
             </motion.div>

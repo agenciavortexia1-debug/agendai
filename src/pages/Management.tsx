@@ -187,13 +187,18 @@ export default function Management({ session }: { session: any }) {
     };
 
     return (
-        <div className="min-h-screen flex flex-col md:flex-row bg-zinc-50/50">
+        <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-zinc-50">
             <Sidebar />
-            <main className="flex-1 p-4 md:p-10 pb-24 md:pb-10 overflow-y-auto">
-                <header className="mb-8">
-                    <h1 className="text-2xl md:text-3xl font-display font-bold text-zinc-900">Gestão do Negócio</h1>
-                    <p className="text-zinc-500 text-sm mt-1">Configure sua equipe, serviços e acessos.</p>
+            <main className="flex-1 flex flex-col overflow-hidden pb-16 md:pb-0">
+                {/* Compact Top Bar */}
+                <header className="flex-shrink-0 bg-white border-b border-zinc-100 px-4 md:px-6 h-14 flex items-center gap-3">
+                    <div>
+                        <h1 className="text-sm font-sans font-bold text-zinc-900 leading-tight">Gestão do Negócio</h1>
+                        <p className="text-[10px] text-zinc-400 leading-tight hidden sm:block">Configure sua equipe, serviços e acessos.</p>
+                    </div>
                 </header>
+
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
 
                 {/* Custom Tabs */}
                 <div className="flex p-1 bg-zinc-100 rounded-xl mb-8 max-w-md w-full">
@@ -536,6 +541,9 @@ export default function Management({ session }: { session: any }) {
                     </motion.div>
                 </div>
             )}
+            </div>
+            </div>
+            </main>
         </div>
     );
 }
