@@ -81,25 +81,6 @@ export default function ClientPortal() {
       setCancellingId(null);
     }
   };
-    try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status: 'cancelled' })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      setAppointments(prev => prev.map(app => 
-        app.id === id ? { ...app, status: 'cancelled' } : app
-      ));
-      return true;
-    } catch (err) {
-      alert('Erro ao cancelar agendamento');
-      return false;
-    } finally {
-      setCancellingId(null);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
