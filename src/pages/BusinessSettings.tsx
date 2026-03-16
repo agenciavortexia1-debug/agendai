@@ -311,13 +311,13 @@ export default function BusinessSettings({ session }: { session: Session }) {
               </div>
 
               {/* Right: Logo + Save */}
-              <div className="p-4 md:p-6 space-y-4">
-                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 space-y-3">
-                  <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+              <div className="p-4 md:p-6 h-full flex flex-col">
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 flex flex-col flex-1 h-full min-h-[400px]">
+                  <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-4">
                     <ImageIcon className="w-3.5 h-3.5" /> Logo da Empresa
                   </h3>
-                  <div className="relative group">
-                    <div className="w-full aspect-square rounded-xl bg-zinc-50 border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center text-center p-4 group-hover:bg-zinc-100 transition-all overflow-hidden">
+                  <div className="relative group flex-1 flex flex-col">
+                    <div className="w-full flex-1 rounded-xl bg-zinc-50 border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center text-center p-4 group-hover:bg-zinc-100 transition-all overflow-hidden">
                       {(logoFile || business.logo_url) ? (
                         <img
                           src={logoFile ? URL.createObjectURL(logoFile) : business.logo_url!}
@@ -339,10 +339,10 @@ export default function BusinessSettings({ session }: { session: Session }) {
                       </button>
                     )}
                   </div>
-                  <p className="text-[10px] text-zinc-400 text-center">Aparece na página pública de agendamento</p>
+                  <p className="text-[10px] text-zinc-400 text-center mt-4">Aparece na página pública de agendamento</p>
                 </div>
                 {error && (
-                  <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-500 text-xs font-medium">{error}</div>
+                  <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-red-500 text-xs font-medium mt-4">{error}</div>
                 )}
               </div>
 
