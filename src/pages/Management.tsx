@@ -224,7 +224,7 @@ export default function Management({ session }: { session: any }) {
                 {/* Tab Content */}
                 <div className="space-y-6">
                     <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                        <h2 className="font-display font-bold text-zinc-900">
+                        <h2 className="text-base font-bold text-zinc-900">
                             {activeTab === 'staff' && "Membros da Equipe"}
                             {activeTab === 'services' && "Catálogo de Serviços"}
                             {activeTab === 'access' && "Controle de Credenciais"}
@@ -255,22 +255,22 @@ export default function Management({ session }: { session: any }) {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     key={prof.id}
-                                    className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm hover:border-primary/20 transition-all group"
+                                    className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm hover:border-zinc-300 transition-all group flex items-center justify-between gap-3"
                                 >
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex-shrink-0 relative overflow-hidden ring-4 ring-zinc-50">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-zinc-100 flex-shrink-0 relative overflow-hidden ring-1 ring-zinc-100">
                                             {prof.avatar_url ? (
                                                 <img src={prof.avatar_url} alt={prof.name} className="w-full h-full object-cover" />
                                             ) : (
-                                                <Users className="w-6 h-6 m-auto absolute inset-0 text-zinc-400" />
+                                                <Users className="w-5 h-5 m-auto absolute inset-0 text-zinc-400" />
                                             )}
                                         </div>
                                         <div className="min-w-0">
-                                            <h3 className="font-bold text-zinc-900 truncate">{prof.name}</h3>
-                                            <p className="text-xs text-zinc-400 uppercase tracking-widest font-semibold">{prof.role === 'owner' ? 'Dono' : 'Equipe'}</p>
+                                            <h3 className="text-sm font-bold text-zinc-900 truncate">{prof.name}</h3>
+                                            <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold">{prof.role === 'owner' ? 'Dono' : 'Equipe'}</p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex items-center gap-1 flex-shrink-0">
                                         <button
                                             onClick={() => {
                                                 setEditingItem(prof);
@@ -288,11 +288,11 @@ export default function Management({ session }: { session: any }) {
                                                 });
                                                 setIsModalOpen(true);
                                             }}
-                                            className="flex-1 py-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-lg text-xs font-bold transition-all"
-                                        >Editar</button>
+                                            className="p-2 text-zinc-400 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-lg transition-all"
+                                        ><Edit2 className="w-4 h-4" /></button>
                                         <button
                                             onClick={() => handleDelete(prof.id, 'professionals')}
-                                            className="p-2 text-zinc-300 hover:text-red-500 transition-colors"
+                                            className="p-2 text-zinc-400 hover:text-red-500 bg-zinc-50 hover:bg-red-50 rounded-lg transition-colors"
                                         ><Trash2 className="w-4 h-4" /></button>
                                     </div>
                                 </motion.div>
@@ -306,17 +306,21 @@ export default function Management({ session }: { session: any }) {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     key={svc.id}
-                                    className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm hover:border-blue-200 transition-all group"
+                                    className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm hover:border-zinc-300 transition-all group flex items-center justify-between gap-3"
                                 >
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
-                                        <Briefcase className="w-6 h-6" />
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 bg-zinc-100 text-zinc-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <Briefcase className="w-5 h-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className="text-sm font-bold text-zinc-900 truncate">{svc.name}</h3>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-zinc-100 rounded text-zinc-500">{svc.duration_minutes} min</span>
+                                                <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded">R$ {svc.price}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h3 className="font-bold text-zinc-900">{svc.name}</h3>
-                                    <div className="flex items-center gap-2 mt-2 mb-6">
-                                        <span className="text-xs font-semibold px-2 py-1 bg-zinc-100 rounded text-zinc-500">{svc.duration_minutes} min</span>
-                                        <span className="text-xs font-semibold px-2 py-1 bg-emerald-50 text-emerald-600 rounded">R$ {svc.price}</span>
-                                    </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex items-center gap-1 flex-shrink-0">
                                         <button
                                             onClick={() => {
                                                 setEditingItem(svc);
@@ -328,11 +332,11 @@ export default function Management({ session }: { session: any }) {
                                                 });
                                                 setIsModalOpen(true);
                                             }}
-                                            className="flex-1 py-2 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-lg text-xs font-bold transition-all"
-                                        >Editar</button>
+                                            className="p-2 text-zinc-400 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-lg transition-all"
+                                        ><Edit2 className="w-4 h-4" /></button>
                                         <button
                                             onClick={() => handleDelete(svc.id, 'services')}
-                                            className="p-2 text-zinc-300 hover:text-red-500 transition-colors"
+                                            className="p-2 text-zinc-400 hover:text-red-500 bg-zinc-50 hover:bg-red-50 rounded-lg transition-colors"
                                         ><Trash2 className="w-4 h-4" /></button>
                                     </div>
                                 </motion.div>
@@ -346,15 +350,15 @@ export default function Management({ session }: { session: any }) {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     key={`access-${prof.id}`}
-                                    className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm flex items-center justify-between"
+                                    className="bg-white p-4 rounded-xl border border-zinc-200 shadow-sm flex items-center justify-between gap-3"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 font-bold">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-400 font-bold flex-shrink-0">
                                             {prof.name.charAt(0)}
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-zinc-900">{prof.name}</h3>
-                                            <p className="text-xs text-zinc-500 italic">{prof.login_user || 'Sem usuário'}</p>
+                                        <div className="min-w-0">
+                                            <h3 className="text-sm font-bold text-zinc-900 truncate">{prof.name}</h3>
+                                            <p className="text-[10px] text-zinc-500 italic truncate">{prof.login_user || 'Sem usuário'}</p>
                                         </div>
                                     </div>
                                     <button
@@ -374,9 +378,9 @@ export default function Management({ session }: { session: any }) {
                                             });
                                             setIsModalOpen(true);
                                         }}
-                                        className="p-2 text-zinc-400 hover:bg-zinc-50 rounded-lg transition-all"
+                                        className="p-2 text-zinc-400 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-lg transition-all flex-shrink-0"
                                     >
-                                        <Lock className="w-5 h-5" />
+                                        <Lock className="w-4 h-4" />
                                     </button>
                                 </motion.div>
                             ))}
