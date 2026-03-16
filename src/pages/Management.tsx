@@ -383,7 +383,7 @@ export default function Management({ session }: { session: any }) {
                         </AnimatePresence>
                     </div>
                 </div>
-            </main>
+            </div>
 
             {/* Unified Modal */}
             {isModalOpen && (
@@ -541,8 +541,6 @@ export default function Management({ session }: { session: any }) {
                     </motion.div>
                 </div>
             )}
-            </div>
-            </div>
             </main>
         </div>
     );
