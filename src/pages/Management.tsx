@@ -13,7 +13,9 @@ import {
     Check,
     X,
     Smartphone,
-    ChevronRight
+    ChevronRight,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import { Professional, Service } from '../types';
 import Sidebar from '../components/Sidebar';
@@ -34,6 +36,7 @@ export default function Management({ session }: { session: any }) {
     const [editingItem, setEditingItem] = useState<any>(null);
     const [uploading, setUploading] = useState(false);
     const [profServicesData, setProfServicesData] = useState<any[]>([]);
+    const [showPassword, setShowPassword] = useState(false);
 
     // Form States
     const [formData, setFormData] = useState({
@@ -502,11 +505,20 @@ export default function Management({ session }: { session: any }) {
                                         </div>
                                         <div className="space-y-1">
                                             <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Senha</label>
-                                            <input
-                                                type="password" value={formData.login_pass} onChange={e => setFormData({ ...formData, login_pass: e.target.value })}
-                                                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                placeholder="••••••••"
-                                            />
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword ? "text" : "password"} value={formData.login_pass} onChange={e => setFormData({ ...formData, login_pass: e.target.value })}
+                                                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-4 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                    placeholder="••••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

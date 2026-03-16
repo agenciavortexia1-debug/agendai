@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, User, Loader2, ArrowRight, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, User, Loader2, ArrowRight, ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ClientBookingAuthProps {
@@ -18,6 +18,7 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
   const [name, setName] = useState(initialName);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,13 +136,20 @@ export default function ClientBookingAuth({ onSuccess, onBack, initialEmail = ''
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black/20" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#f5f5f0] border-none rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
+                className="w-full bg-[#f5f5f0] border-none rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-[var(--primary-color)] transition-all"
                 placeholder="Crie uma senha"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-black/40 hover:text-black/60 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 

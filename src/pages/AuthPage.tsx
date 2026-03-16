@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
-import { Calendar, Mail, Lock, Loader2, ArrowLeft } from 'lucide-react';
+import { Calendar, Mail, Lock, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 
 export default function AuthPage() {
@@ -18,6 +18,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Tenta buscar o email usado no Stripe para pre-preencher o campo
   useEffect(() => {
@@ -140,13 +141,20 @@ export default function AuthPage() {
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-300" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
+                    className="w-full bg-zinc-50 border border-zinc-100 rounded-xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-primary transition-all text-zinc-900"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
             )}
