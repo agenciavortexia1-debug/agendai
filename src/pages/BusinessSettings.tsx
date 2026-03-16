@@ -312,7 +312,7 @@ export default function BusinessSettings({ session }: { session: Session }) {
 
               {/* Right: Logo + Save */}
               <div className="p-4 md:p-6 h-full flex flex-col">
-                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 flex flex-col flex-1 h-full min-h-[400px]">
+                <div className="bg-white rounded-xl p-5 shadow-sm border border-zinc-200 flex flex-col flex-1 h-full min-h-0">
                   <h3 className="text-xs font-sans font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-4">
                     <ImageIcon className="w-3.5 h-3.5" /> Logo da Empresa
                   </h3>
