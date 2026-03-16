@@ -542,12 +542,20 @@ export default function PublicBooking() {
                           </p>
                           <p className="text-xs text-zinc-500">{format(parseISO(app.start_time), 'HH:mm')}</p>
                         </div>
-                        <button
-                          onClick={() => handleCancelAppointment(app.id)}
-                          className="text-xs text-red-500 hover:text-red-700 font-semibold"
-                        >
-                          Cancelar
-                        </button>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => handleRescheduleClick(app)}
+                            className="text-xs text-zinc-500 hover:text-zinc-900 font-semibold transition-colors"
+                          >
+                            Reagendar
+                          </button>
+                          <button
+                            onClick={() => handleCancelAppointment(app.id)}
+                            className="text-xs text-red-500 hover:text-red-700 font-semibold transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
