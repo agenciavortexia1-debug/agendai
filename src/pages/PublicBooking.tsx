@@ -375,15 +375,21 @@ export default function PublicBooking() {
         });
         if (error) throw error;
 
-        // Disparar WhatsApp de confirmação (silencioso — não bloqueia o fluxo se falhar)
+        // Disparar webhook n8n para envio da confirmação via WhatsApp (silencioso)
         if (formData.phone) {
-          fetch('/api/send-whatsapp', {
+          fetch('https://2n8n-n8n.oggciy.easypanel.host/webhook/wahawebhook', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               business_id: business.id,
+              business_name: business.name,
+              whatsapp_habilitado: business.whatsapp_habilitado ?? false,
               client_phone: formData.phone,
               client_name: formData.name,
+              client_email: formData.email,
+              service_name: selectedService?.name || '',
+              professional_name: selectedProfessional?.name || '',
+              start_time: selectedSlot.start.toISOString(),
               tipo: 'confirmacao',
             }),
           }).catch(() => {/* silencioso */});
