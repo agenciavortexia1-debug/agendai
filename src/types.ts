@@ -13,6 +13,23 @@ export type Business = {
   show_address: boolean;
   show_reference: boolean;
   created_at: string;
+  // WhatsApp (WAHA)
+  whatsapp_habilitado?: boolean;
+  waha_url?: string | null;
+  waha_session?: string | null;
+  waha_api_key?: string | null;
+  msg_confirmacao?: string | null;
+  msg_lembrete?: string | null;
+  msg_cancelamento?: string | null;
+  msg_pos_atendimento?: string | null;
+  lembrete_horas_antes?: number[] | null;
+  // Pagamento (AbacatePay)
+  pagamento_habilitado?: boolean;
+  abacatepay_api_key?: string | null;
+  modo_cobranca?: 'total' | 'sinal' | null;
+  sinal_tipo?: 'percent' | 'fixed' | null;
+  sinal_valor?: number | null;
+  pagamento_expiracao_min?: number;
 };
 
 export type BusinessHour = {
@@ -49,6 +66,12 @@ export type Appointment = {
   status: 'confirmed' | 'cancelled';
   created_at: string;
   updated_at?: string;
+  // Pagamento
+  status_pagamento?: 'pendente' | 'pago' | 'expirado' | 'isento';
+  abacatepay_charge_id?: string | null;
+  valor_pago?: number | null;
+  pago_em?: string | null;
+  expira_em?: string | null;
 };
 
 export type AvailableSlot = {
@@ -68,6 +91,9 @@ export type Professional = {
   login_user: string | null;
   login_pass: string | null;
   created_at: string;
+  // Comissão
+  commission_type?: 'percent' | 'fixed' | 'none';
+  commission_value?: number | null;
 };
 
 export type Service = {

@@ -8,7 +8,9 @@ import {
   ChevronRight,
   ChevronLeft,
   BarChart3,
-  LayoutGrid
+  LayoutGrid,
+  MessageSquare,
+  CreditCard
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
@@ -61,6 +63,8 @@ export default function Sidebar() {
     { path: '/dashboard/analytics', icon: BarChart3, label: 'Análises' },
     { path: '/dashboard/hours', icon: Clock, label: 'Horários' },
     { path: '/dashboard/management', icon: LayoutGrid, label: 'Gestão' },
+    { path: '/dashboard/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
+    { path: '/dashboard/payment', icon: CreditCard, label: 'Pagamento' },
     { path: '/dashboard/settings', icon: Settings, label: 'Configurações' },
   ];
 

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
@@ -18,8 +18,12 @@ import ResetPassword from './pages/ResetPassword';
 import Analytics from './pages/Analytics';
 import Management from './pages/Management';
 import StaffLogin from './pages/StaffLogin';
+import WhatsAppConfig from './pages/WhatsAppConfig';
+import PaymentConfig from './pages/PaymentConfig';
 
-export default function App() {
+// Componente interno para ter acesso ao useNavigate dentro do BrowserRouter
+function AppRoutes() {
+  const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [staffSession, setStaffSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -46,14 +50,14 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
-      // Quando o usuario clica no link de recuperação de senha, redireciona para a tela correta
+      // Usar navigate() em vez de window.location.href para NÃO destruir a sessão de recuperação
       if (event === 'PASSWORD_RECOVERY') {
-        window.location.href = '/reset-password';
+        navigate('/reset-password');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (session) {
@@ -87,8 +91,7 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/dashboard" />} />
 
@@ -139,8 +142,27 @@ export default function App() {
         {/* Reset Password Route */}
         <Route path="/reset-password" element={<ResetPassword />} />
 
+        {/* WhatsApp Config Route */}
+        <Route
+          path="/dashboard/whatsapp"
+          element={session ? <WhatsAppConfig session={session} /> : <Navigate to="/auth" />}
+        />
+
+        {/* Payment Config Route */}
+        <Route
+          path="/dashboard/payment"
+          element={session ? <PaymentConfig session={session} /> : <Navigate to="/auth" />}
+        />
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

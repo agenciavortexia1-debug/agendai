@@ -22,6 +22,8 @@ export default function Staff({ session }: { session: any }) {
     const [role, setRole] = useState<'owner' | 'employee'>('employee');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [accessScreens, setAccessScreens] = useState<string[]>(['agenda']); // Default access
+    const [commissionType, setCommissionType] = useState<'percent' | 'fixed' | 'none'>('none');
+    const [commissionValue, setCommissionValue] = useState('');
 
     const AVAILABLE_SCREENS = [
         { id: 'Agenda', label: 'Ver Agenda' },
@@ -85,6 +87,8 @@ export default function Staff({ session }: { session: any }) {
             setPhone(professional.phone || '');
             setRole(professional.role);
             setAccessScreens(professional.access_screens || []);
+            setCommissionType((professional.commission_type as any) || 'none');
+            setCommissionValue(professional.commission_value !== null && professional.commission_value !== undefined ? String(professional.commission_value) : '');
             // Pre-select services will require an extra fetch, let's keep it simple for now or fetch it during editing
             fetchProfessionalServices(professional.id);
         } else {
@@ -95,6 +99,8 @@ export default function Staff({ session }: { session: any }) {
             setRole('employee');
             setAccessScreens(['agenda']);
             setSelectedServices([]);
+            setCommissionType('none');
+            setCommissionValue('');
         }
         setIsModalOpen(true);
     };
@@ -148,7 +154,9 @@ export default function Staff({ session }: { session: any }) {
                 email: email || null,
                 phone: phone || null,
                 role,
-                access_screens: role === 'owner' ? AVAILABLE_SCREENS.map(s => s.id) : accessScreens
+                access_screens: role === 'owner' ? AVAILABLE_SCREENS.map(s => s.id) : accessScreens,
+                commission_type: commissionType,
+                commission_value: commissionType !== 'none' && commissionValue ? parseFloat(commissionValue) : null,
             };
 
             let newProfessionalId;
@@ -369,6 +377,53 @@ export default function Staff({ session }: { session: any }) {
                                             />
                                         </div>
                                     </div>
+                                </section>
+
+                                <hr className="border-zinc-200" />
+
+                                {/* Comissão */}
+                                <section>
+                                    <h3 className="text-sm font-semibold text-zinc-900 uppercase tracking-wider mb-4">Comissão por Atendimento</h3>
+                                    <div className="grid grid-cols-3 gap-2 mb-4">
+                                        {(['none', 'percent', 'fixed'] as const).map(ct => (
+                                            <label
+                                                key={ct}
+                                                className={`flex flex-col items-center gap-1 p-3 border rounded-xl cursor-pointer transition-all ${commissionType === ct ? 'border-zinc-900 bg-zinc-50' : 'border-zinc-200 hover:border-zinc-300'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="commissionType"
+                                                    value={ct}
+                                                    checked={commissionType === ct}
+                                                    onChange={() => setCommissionType(ct)}
+                                                    className="sr-only"
+                                                />
+                                                <span className="font-semibold text-zinc-900 text-sm">
+                                                    {ct === 'none' ? 'Sem comissão' : ct === 'percent' ? 'Percentual' : 'Valor fixo'}
+                                                </span>
+                                                <span className="text-[10px] text-zinc-500">
+                                                    {ct === 'none' ? 'Não se aplica' : ct === 'percent' ? '% sobre o serviço' : 'R$ por atendimento'}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {commissionType !== 'none' && (
+                                        <div className="space-y-1.5">
+                                            <label className="block text-sm font-medium text-zinc-700">
+                                                {commissionType === 'percent' ? 'Percentual (%)' : 'Valor por atendimento (R$)'}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step={commissionType === 'percent' ? '1' : '0.01'}
+                                                max={commissionType === 'percent' ? '100' : undefined}
+                                                value={commissionValue}
+                                                onChange={e => setCommissionValue(e.target.value)}
+                                                className="w-full px-4 py-2 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary placeholder-zinc-400"
+                                                placeholder={commissionType === 'percent' ? 'Ex: 30' : 'Ex: 50.00'}
+                                            />
+                                        </div>
+                                    )}
                                 </section>
 
                                 <hr className="border-zinc-200" />

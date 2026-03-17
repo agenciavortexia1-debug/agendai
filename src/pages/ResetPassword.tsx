@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
 import { Lock, Loader2, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
@@ -13,14 +13,32 @@ export default function ResetPassword() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
-    React.useEffect(() => {
-        // Verifica se o usuário tem uma sessão (o Supabase já deve ter processado o link de recuperação)
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!session) {
-                setError('Link de recuperação inválido ou expirado. Por favor, solicite um novo.');
+    useEffect(() => {
+        // Ouve o evento de auth — o Supabase emite PASSWORD_RECOVERY ou SIGNED_IN
+        // quando processa o hash do link de recuperação na URL
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+                // Sessão de recuperação válida — libera o formulário
+                setAuthLoading(false);
+                setError(null);
             }
-            setAuthLoading(false);
         });
+
+        // Também verifica sessão já existente (caso a página seja acessada diretamente)
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                setAuthLoading(false);
+            } else {
+                // Aguarda até 3s pelo evento do Supabase antes de mostrar erro
+                const timeout = setTimeout(() => {
+                    setError('Link de recuperação inválido ou expirado. Por favor, solicite um novo.');
+                    setAuthLoading(false);
+                }, 3000);
+                return () => clearTimeout(timeout);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
     if (authLoading) {
