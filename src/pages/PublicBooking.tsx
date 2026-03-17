@@ -374,6 +374,20 @@ export default function PublicBooking() {
           status: 'confirmed'
         });
         if (error) throw error;
+
+        // Disparar WhatsApp de confirmação (silencioso — não bloqueia o fluxo se falhar)
+        if (formData.phone) {
+          fetch('/api/send-whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              business_id: business.id,
+              client_phone: formData.phone,
+              client_name: formData.name,
+              tipo: 'confirmacao',
+            }),
+          }).catch(() => {/* silencioso */});
+        }
       }
 
       // Refresh user appointments
