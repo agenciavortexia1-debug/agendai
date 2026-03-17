@@ -383,7 +383,9 @@ export default function PublicBooking() {
             body: JSON.stringify({
               business_id: business.id,
               business_name: business.name,
-              whatsapp_habilitado: business.whatsapp_habilitado ?? false,
+              whatsapp_habilitado: (business as any).whatsapp_habilitado ?? false,
+              // Templates já vêm carregados com o negócio — sem necessidade de callback
+              msg_confirmacao: (business as any).msg_confirmacao || '',
               client_phone: formData.phone,
               client_name: formData.name,
               client_email: formData.email,
