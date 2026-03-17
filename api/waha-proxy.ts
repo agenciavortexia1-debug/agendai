@@ -1,20 +1,24 @@
 // api/waha-proxy.ts
-// Proxy seguro para chamadas ao WAHA — nunca expõe a API Key no cliente
+// Proxy seguro para chamadas ao WAHA — usa URL e Key fixas/de ambiente
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    const { action, url, session, key } = req.query as Record<string, string>;
+    const { action, session } = req.query as Record<string, string>;
 
-    if (!url || !session) {
-        return res.status(400).json({ error: 'url e session são obrigatórios' });
+    if (!session) {
+        return res.status(400).json({ error: 'session é obrigatório' });
     }
 
+    // Configuração fixa do servidor WAHA
+    const WAHA_URL = process.env.WAHA_URL || 'https://2n8n-waha.oggciy.easypanel.host';
+    const WAHA_API_KEY = process.env.WAHA_API_KEY || 'SBrNRu8doChS8amCmy1sI7PmpXyR8eba';
+
     // Remove barra final da URL
-    const baseUrl = url.replace(/\/$/, '');
+    const baseUrl = WAHA_URL.replace(/\/$/, '');
 
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'X-Api-Key': key || '',
+        'X-Api-Key': WAHA_API_KEY,
     };
 
     try {
@@ -33,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (action === 'qr') {
             const qrUrl = `${baseUrl}/api/${session}/auth/qr?format=image`;
             const resp = await fetch(qrUrl, {
-                headers: { 'X-Api-Key': key || '' },
+                headers: { 'X-Api-Key': WAHA_API_KEY },
             });
 
             if (!resp.ok) {

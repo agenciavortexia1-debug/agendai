@@ -60,12 +60,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             // Busca configurações de WhatsApp do negócio para disparar confirmação
             const { data: business } = await supabase
                 .from('businesses')
-                .select('whatsapp_habilitado, waha_url, waha_session, waha_api_key, msg_confirmacao, name')
+                .select('whatsapp_habilitado, msg_confirmacao, name')
                 .eq('id', appointment.business_id)
                 .single();
 
+            const WAHA_URL = process.env.WAHA_URL || 'https://2n8n-waha.oggciy.easypanel.host';
+            const WAHA_API_KEY = process.env.WAHA_API_KEY || 'SBrNRu8doChS8amCmy1sI7PmpXyR8eba';
+
             // Dispara WhatsApp se habilitado
-            if (business?.whatsapp_habilitado && business.waha_url && business.waha_session && appointment.client_phone) {
+            if (business?.whatsapp_habilitado && appointment.client_phone) {
                 try {
                     // Formata telefone: remove tudo que não é número
                     const telefone = appointment.client_phone.replace(/\D/g, '');
@@ -76,14 +79,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         .replace('{nome}', appointment.client_name)
                         .replace('{negocio}', business.name || '');
 
-                    await fetch(`${business.waha_url}/api/sendText`, {
+                    await fetch(`${WAHA_URL.replace(/\/$/, '')}/api/sendText`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            ...(business.waha_api_key ? { 'X-Api-Key': business.waha_api_key } : {}),
+                            'X-Api-Key': WAHA_API_KEY,
                         },
                         body: JSON.stringify({
-                            session: business.waha_session,
+                            session: appointment.business_id, // Usamos o ID do negócio como sessão
                             chatId,
                             text: mensagem,
                         }),

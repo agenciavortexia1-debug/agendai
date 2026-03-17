@@ -79,9 +79,6 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
     const [businessId, setBusinessId] = useState<string | null>(null);
 
     // Config WAHA
-    const [wahaUrl, setWahaUrl] = useState('');
-    const [wahaSession, setWahaSession] = useState('default');
-    const [wahaApiKey, setWahaApiKey] = useState('');
     const [whatsappHabilitado, setWhatsappHabilitado] = useState(false);
     const [lembretesHoras, setLembretesHoras] = useState('24, 2');
 
@@ -126,9 +123,6 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
 
         if (data) {
             setBusinessId(data.id);
-            setWahaUrl(data.waha_url || '');
-            setWahaSession(data.waha_session || 'default');
-            setWahaApiKey(data.waha_api_key || '');
             setWhatsappHabilitado(data.whatsapp_habilitado || false);
             if (data.lembrete_horas_antes?.length) {
                 setLembretesHoras((data.lembrete_horas_antes as number[]).join(', '));
@@ -146,11 +140,10 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
 
     // ─── Helpers de proxy ────────────────────────────────────────────
     function proxyUrl(action: string) {
+        if (!businessId) return '';
         const params = new URLSearchParams({
             action,
-            url: wahaUrl.replace(/\/$/, ''),
-            session: wahaSession,
-            key: wahaApiKey,
+            session: businessId, // Usamos o ID do negócio como nome da sessão
         });
         return `/api/waha-proxy?${params}`;
     }
@@ -200,7 +193,7 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
 
     // ─── Verificar status ─────────────────────────────────────────────
     async function handleCheckStatus() {
-        if (!wahaUrl) { setErrorMsg('Configure a URL do WAHA primeiro.'); return; }
+        if (!businessId) return;
         setLoadingStatus(true);
         setErrorMsg(null);
         try {
@@ -223,7 +216,7 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
 
     // ─── Buscar QR ───────────────────────────────────────────────────
     async function handleGetQr() {
-        if (!wahaUrl) { setErrorMsg('Configure a URL do WAHA primeiro.'); return; }
+        if (!businessId) return;
         setLoadingQr(true);
         setQrBase64(null);
         setErrorMsg(null);
@@ -246,7 +239,7 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
 
     // ─── Iniciar sessão ───────────────────────────────────────────────
     async function handleStart() {
-        if (!wahaUrl) { setErrorMsg('Configure a URL do WAHA primeiro.'); return; }
+        if (!businessId) return;
         setLoadingStart(true);
         setErrorMsg(null);
         try {
@@ -294,9 +287,6 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
 
             const { error } = await supabase.from('businesses').update({
                 whatsapp_habilitado: whatsappHabilitado,
-                waha_url: wahaUrl || null,
-                waha_session: wahaSession || null,
-                waha_api_key: wahaApiKey || null,
                 msg_confirmacao: templates.confirmacao || null,
                 msg_lembrete: templates.lembrete || null,
                 msg_cancelamento: templates.cancelamento || null,
@@ -343,8 +333,8 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
     }
 
     const si = STATUS_INFO[status];
-    const canGetQr = wahaUrl && (status !== 'WORKING');
-    const canConnect = wahaUrl && (status === 'STOPPED' || status === 'UNKNOWN');
+    const canGetQr = businessId && (status !== 'WORKING');
+    const canConnect = businessId && (status === 'STOPPED' || status === 'UNKNOWN');
 
     // ─── Render ───────────────────────────────────────────────────────
     return (
@@ -407,37 +397,17 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
                     {activeTab === 'conexao' && (
                         <div className="max-w-xl space-y-4">
 
-                            {/* Credenciais WAHA */}
+                            {/* Configuração de Lembretes */}
                             <div className="bg-white rounded-xl p-5 border border-zinc-200 space-y-3">
-                                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Configuração do WAHA</h3>
-                                <div className="space-y-2">
-                                    <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">URL do WAHA</label>
-                                        <input type="url" value={wahaUrl} onChange={e => setWahaUrl(e.target.value)}
-                                            className="mt-1 w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 px-3 text-sm focus:ring-2 focus:ring-zinc-900 transition-all"
-                                            placeholder="https://waha.meudominio.com" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Sessão</label>
-                                            <input type="text" value={wahaSession} onChange={e => setWahaSession(e.target.value)}
-                                                className="mt-1 w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 px-3 text-sm focus:ring-2 focus:ring-zinc-900 transition-all"
-                                                placeholder="default" />
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">API Key</label>
-                                            <input type="password" value={wahaApiKey} onChange={e => setWahaApiKey(e.target.value)}
-                                                className="mt-1 w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 px-3 text-sm focus:ring-2 focus:ring-zinc-900 transition-all"
-                                                placeholder="••••••••" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Horas dos lembretes (separado por vírgula)</label>
-                                        <input type="text" value={lembretesHoras} onChange={e => setLembretesHoras(e.target.value)}
-                                            className="mt-1 w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 px-3 text-sm focus:ring-2 focus:ring-zinc-900 transition-all"
-                                            placeholder="24, 2" />
-                                        <p className="text-[10px] text-zinc-400 mt-1">Ex: 24, 2 = lembrete 24h antes e 2h antes do agendamento</p>
-                                    </div>
+                                <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest gap-2 flex items-center">
+                                    <MessageSquare className="w-3.5 h-3.5" /> Frequência de Lembretes
+                                </h3>
+                                <div>
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Horas antes do agendamento (separado por vírgula)</label>
+                                    <input type="text" value={lembretesHoras} onChange={e => setLembretesHoras(e.target.value)}
+                                        className="mt-1 w-full bg-zinc-50 border border-zinc-200 rounded-lg py-2.5 px-3 text-sm focus:ring-2 focus:ring-zinc-900 transition-all"
+                                        placeholder="24, 2" />
+                                    <p className="text-[10px] text-zinc-400 mt-1">Ex: 24, 2 = O cliente receberá um aviso um dia antes e outro 2 horas antes.</p>
                                 </div>
                             </div>
 
@@ -445,7 +415,7 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
                             <div className="bg-white rounded-xl p-5 border border-zinc-200 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Status da Conexão</h3>
-                                    <button onClick={handleCheckStatus} disabled={!wahaUrl || loadingStatus}
+                                    <button onClick={handleCheckStatus} disabled={!businessId || loadingStatus}
                                         className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-800 disabled:opacity-40 transition-colors">
                                         <RefreshCw className={`w-3.5 h-3.5 ${loadingStatus ? 'animate-spin' : ''}`} />
                                         Atualizar
@@ -460,9 +430,9 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
                                         <p className="text-[11px] text-zinc-500">
                                             {status === 'WORKING'      && 'WhatsApp conectado. Mensagens automáticas ativas.'}
                                             {status === 'STOPPED'      && 'Sessão parada. Clique em "Conectar" para iniciar.'}
-                                            {status === 'SCAN_QR_CODE' && 'Sessão iniciada. Clique em "Obter QR" e escaneie.'}
-                                            {status === 'STARTING'     && 'Aguarde, iniciando sessão WAHA...'}
-                                            {status === 'UNKNOWN'      && 'Verifique a URL e API Key e clique em "Atualizar".'}
+                                            {status === 'SCAN_QR_CODE' && 'Sessão iniciada. Clique em "Obter QR" e escaneie com seu WhatsApp.'}
+                                            {status === 'STARTING'     && 'Aguarde, iniciando integração WhatsApp...'}
+                                            {status === 'UNKNOWN'      && 'Verificando conexão...'}
                                             {status === 'LOADING'      && 'Verificando conexão com o WAHA...'}
                                         </p>
                                     </div>
@@ -519,16 +489,16 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
                                 <div className="flex flex-wrap gap-2 pt-1">
                                     {/* Conectar (sessão STOPPED ou UNKNOWN) */}
                                     {canConnect && (
-                                        <button onClick={handleStart} disabled={loadingStart || !wahaUrl}
+                                        <button onClick={handleStart} disabled={loadingStart}
                                             className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white rounded-xl text-sm font-semibold hover:bg-black disabled:opacity-50 transition-all">
                                             {loadingStart ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                                            Conectar
+                                            Conectar WhatsApp
                                         </button>
                                     )}
 
                                     {/* Obter QR (quando sessão está aguardando scan) */}
                                     {canGetQr && (
-                                        <button onClick={handleGetQr} disabled={loadingQr || !wahaUrl}
+                                        <button onClick={handleGetQr} disabled={loadingQr}
                                             className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 text-white rounded-xl text-sm font-semibold hover:bg-zinc-900 disabled:opacity-50 transition-all">
                                             {loadingQr ? <Loader2 className="w-4 h-4 animate-spin" /> : <QrCode className="w-4 h-4" />}
                                             {qrTimer > 0 ? 'Novo QR Code' : 'Obter QR Code'}

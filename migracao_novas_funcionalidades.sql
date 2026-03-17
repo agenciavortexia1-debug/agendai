@@ -12,9 +12,6 @@
 -- WhatsApp
 ALTER TABLE "Agenda2".businesses
     ADD COLUMN IF NOT EXISTS whatsapp_habilitado BOOLEAN DEFAULT false,
-    ADD COLUMN IF NOT EXISTS waha_url TEXT,
-    ADD COLUMN IF NOT EXISTS waha_session TEXT,
-    ADD COLUMN IF NOT EXISTS waha_api_key TEXT,
     ADD COLUMN IF NOT EXISTS msg_confirmacao TEXT,
     ADD COLUMN IF NOT EXISTS msg_lembrete TEXT,
     ADD COLUMN IF NOT EXISTS msg_cancelamento TEXT,
@@ -101,7 +98,7 @@ WHERE
     table_schema = 'Agenda2'
     AND table_name IN ('businesses', 'professionals', 'appointments')
     AND column_name IN (
-        'whatsapp_habilitado', 'waha_url', 'waha_session', 'waha_api_key',
+        'whatsapp_habilitado',
         'msg_confirmacao', 'msg_lembrete', 'msg_cancelamento', 'msg_pos_atendimento', 'lembrete_horas_antes',
         'pagamento_habilitado', 'abacatepay_api_key', 'modo_cobranca', 'sinal_tipo', 'sinal_valor', 'pagamento_expiracao_min',
         'commission_type', 'commission_value',

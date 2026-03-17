@@ -3,32 +3,24 @@ export type Business = {
   user_id: string;
   name: string;
   slug: string;
-  logo_url: string | null;
-  primary_color: string | null;
-  font_family: string | null;
-  bg_color: string | null;
-  text_color: string | null;
-  appointment_duration_minutes: number;
-  services: string[] | null;
-  show_address: boolean;
-  show_reference: boolean;
+  phone: string;
+  address: string;
   created_at: string;
-  // WhatsApp (WAHA)
+  logo_url: string;
+  description: string;
+  // WhatsApp
   whatsapp_habilitado?: boolean;
-  waha_url?: string | null;
-  waha_session?: string | null;
-  waha_api_key?: string | null;
-  msg_confirmacao?: string | null;
-  msg_lembrete?: string | null;
-  msg_cancelamento?: string | null;
-  msg_pos_atendimento?: string | null;
-  lembrete_horas_antes?: number[] | null;
-  // Pagamento (AbacatePay)
+  msg_confirmacao?: string;
+  msg_lembrete?: string;
+  msg_cancelamento?: string;
+  msg_pos_atendimento?: string;
+  lembrete_horas_antes?: number[];
+  // Pagamento PIX
   pagamento_habilitado?: boolean;
-  abacatepay_api_key?: string | null;
-  modo_cobranca?: 'total' | 'sinal' | null;
-  sinal_tipo?: 'percent' | 'fixed' | null;
-  sinal_valor?: number | null;
+  abacatepay_api_key?: string;
+  modo_cobranca?: 'total' | 'sinal';
+  sinal_tipo?: 'percent' | 'fixed';
+  sinal_valor?: number;
   pagamento_expiracao_min?: number;
 };
 

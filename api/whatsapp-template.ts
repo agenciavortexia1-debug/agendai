@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
         let query = supabase
             .from('businesses')
-            .select('msg_confirmacao, msg_lembrete, msg_cancelamento, msg_pos_atendimento, lembrete_horas_antes, whatsapp_habilitado, waha_url, waha_session, waha_api_key');
+            .select('msg_confirmacao, msg_lembrete, msg_cancelamento, msg_pos_atendimento, lembrete_horas_antes, whatsapp_habilitado');
 
         if (business_id) {
             query = query.eq('id', business_id);
@@ -46,11 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 pos_atendimento: data.msg_pos_atendimento,
             },
             lembrete_horas_antes: data.lembrete_horas_antes,
-            waha: {
-                url: data.waha_url,
-                session: data.waha_session,
-                // api_key NÃO é exposta neste endpoint por segurança
-            }
+            waha_session: business_id || data.id // Retornar apenas a session (ID) para o n8n saber pra qual ID disparar
         });
     } catch (err: any) {
         return res.status(500).json({ error: err.message });
