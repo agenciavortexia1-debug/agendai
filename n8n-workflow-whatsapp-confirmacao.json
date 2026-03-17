@@ -8,11 +8,11 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "1a2b3c4d-0001-0001-0001-000000000001",
+      "id": "b58f8bbf-11bb-4f78-893a-0abd2757311d",
       "name": "Webhook AgendaI",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [-992, 832],
       "webhookId": "wahawebhook"
     },
     {
@@ -47,61 +47,21 @@
         },
         "options": {}
       },
-      "id": "1a2b3c4d-0002-0002-0002-000000000002",
+      "id": "8afce299-4448-4c8c-af46-dab0e3b47270",
       "name": "Verificar Condições",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [460, 300]
+      "position": [-768, 832]
     },
     {
       "parameters": {
-        "jsCode": "// Pega os dados direto do webhook — sem callback para o Agendai\nconst body = $('Webhook AgendaI').item.json.body;\n\n// Usa o template que veio no payload, ou uma mensagem padrão\nlet mensagem = body.msg_confirmacao || \n  `Olá ${body.client_name}! Seu agendamento foi confirmado. Obrigado por escolher ${body.business_name || 'nosso serviço'}!`;\n\n// Formata a data/hora\nconst data_hora = body.start_time\n  ? new Date(body.start_time).toLocaleString('pt-BR', {\n      timeZone: 'America/Sao_Paulo',\n      day: '2-digit', month: '2-digit',\n      hour: '2-digit', minute: '2-digit'\n    })\n  : '';\n\nconst partes = data_hora ? data_hora.split(', ') : ['', ''];\nconst data_str = partes[0] || '';\nconst hora_str = partes[1] || '';\n\n// Substitui variáveis\nmensagem = mensagem\n  .replace(/{nome}/g, body.client_name || 'Cliente')\n  .replace(/{servico}/g, body.service_name || '')\n  .replace(/{data}/g, data_str)\n  .replace(/{hora}/g, hora_str)\n  .replace(/{profissional}/g, body.professional_name || '')\n  .replace(/{negocio}/g, body.business_name || '');\n\n// Formata telefone: remove tudo que não é número e adiciona @c.us\nconst telefone = body.client_phone.replace(/\\D/g, '');\nconst chatId = `${telefone}@c.us`;\n\nreturn [{\n  json: {\n    session: 'default',\n    chatId,\n    text: mensagem\n  }\n}];"
+        "jsCode": "// Pega os dados direto do webhook — sem callback para o Agendai\nconst body = $('Webhook AgendaI').item.json.body;\n\n// Usa o template que veio no payload, ou uma mensagem padrão\nlet mensagem = body.msg_confirmacao || \n  `Olá ${body.client_name}! Seu agendamento foi confirmado. Obrigado por escolher ${body.business_name || 'nosso serviço'}!`;\n\n// Formata a data/hora\nconst data_hora = body.start_time\n  ? new Date(body.start_time).toLocaleString('pt-BR', {\n      timeZone: 'America/Sao_Paulo',\n      day: '2-digit', month: '2-digit',\n      hour: '2-digit', minute: '2-digit'\n    })\n  : '';\n\nconst partes = data_hora ? data_hora.split(', ') : ['', ''];\nconst data_str = partes[0] || '';\nconst hora_str = partes[1] || '';\n\n// Substitui variáveis\nmensagem = mensagem\n  .replace(/{nome}/g, body.client_name || 'Cliente')\n  .replace(/{servico}/g, body.service_name || '')\n  .replace(/{data}/g, data_str)\n  .replace(/{hora}/g, hora_str)\n  .replace(/{profissional}/g, body.professional_name || '')\n  .replace(/{negocio}/g, body.business_name || '');\n\n// Formata telefone: remove tudo que não é número, garante código do Brasil e formata como chatId do WAHA\nlet telefone = body.client_phone.replace(/\\D/g, '');\n// Se começar com 0 remove, se não tem DDI (menos de 12 dígitos) adiciona 55\nif (telefone.startsWith('0')) telefone = telefone.substring(1);\nif (telefone.length <= 11) telefone = '55' + telefone;\n\nconst chatId = `${telefone}@c.us`;\n\nreturn [{\n  json: {\n    session: 'default',\n    chatId: chatId,\n    text: mensagem\n  }\n}];"
       },
-      "id": "1a2b3c4d-0004-0004-0004-000000000004",
+      "id": "abb6c5f6-5146-4128-9d3a-86a5aacc23db",
       "name": "Montar Mensagem",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [680, 200]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://2n8n-waha.oggciy.easypanel.host/api/sendText",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Api-Key",
-              "value": "SBrNRu8doChS8amCmy1sI7PmpXyR8eba"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"session\": \"{{ $json.session }}\",\n  \"chatId\": \"{{ $json.chatId }}\",\n  \"text\": \"{{ $json.text }}\"\n}",
-        "options": {}
-      },
-      "id": "1a2b3c4d-0005-0005-0005-000000000005",
-      "name": "Enviar WhatsApp",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [900, 200]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={ \"ok\": true, \"message\": \"Mensagem enviada\" }",
-        "options": {}
-      },
-      "id": "1a2b3c4d-0006-0006-0006-000000000006",
-      "name": "Responder OK",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [1120, 200]
+      "position": [-544, 720]
     },
     {
       "parameters": {
@@ -109,11 +69,38 @@
         "responseBody": "={ \"ok\": false, \"message\": \"Condições não atendidas\" }",
         "options": {}
       },
-      "id": "1a2b3c4d-0007-0007-0007-000000000007",
+      "id": "24f9f450-379f-4dcd-8d90-6e27f6d84f98",
       "name": "Responder Skipped",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [680, 400]
+      "position": [-544, 928]
+    },
+    {
+      "parameters": {
+        "resource": "Chatting",
+        "operation": "Send Text",
+        "session": "={{ $json.session }}",
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.text }}",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-waha.WAHA",
+      "typeVersion": 202411,
+      "position": [-336, 720],
+      "id": "9e07016d-88bf-49cb-afe4-c45eaa337669",
+      "name": "Send a text message"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"message\": \"Mensagem enviada\" }",
+        "options": {}
+      },
+      "id": "respok-0001-0001-0001-000000000001",
+      "name": "Responder OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [-112, 720]
     }
   ],
   "connections": {
@@ -150,14 +137,14 @@
       "main": [
         [
           {
-            "node": "Enviar WhatsApp",
+            "node": "Send a text message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Enviar WhatsApp": {
+    "Send a text message": {
       "main": [
         [
           {
@@ -169,13 +156,16 @@
       ]
     }
   },
-  "pinData": {},
+  "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
   },
-  "staticData": null,
-  "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-03-17T00:00:00.000Z",
-  "versionId": "2"
+  "versionId": "b7384de4-e1e2-416c-b848-21ccf62896ff",
+  "meta": {
+    "instanceId": "40f7c37fa2deebc82d990d965085dd3479ea8df30dfde5e5e5b57ca4dc6c6952"
+  },
+  "id": "rfFLpuQJr1Ylt7k3",
+  "tags": []
 }

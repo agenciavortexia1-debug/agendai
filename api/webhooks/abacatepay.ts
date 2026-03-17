@@ -65,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 .single();
 
             const WAHA_URL = process.env.WAHA_URL || 'https://2n8n-waha.oggciy.easypanel.host';
-            const WAHA_API_KEY = process.env.WAHA_API_KEY || 'SBrNRu8doChS8amCmy1sI7PmpXyR8eba';
+            const WAHA_API_KEY = process.env.WAHA_API_KEY || '';
 
             // Dispara WhatsApp se habilitado
             if (business?.whatsapp_habilitado && appointment.client_phone) {

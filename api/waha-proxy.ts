@@ -11,7 +11,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Configuração fixa do servidor WAHA
     const WAHA_URL = process.env.WAHA_URL || 'https://2n8n-waha.oggciy.easypanel.host';
-    const WAHA_API_KEY = process.env.WAHA_API_KEY || 'SBrNRu8doChS8amCmy1sI7PmpXyR8eba';
+    const WAHA_API_KEY = process.env.WAHA_API_KEY;
+    if (!WAHA_API_KEY) return res.status(500).json({ error: 'WAHA_API_KEY não configurada no servidor.' });
 
     // Remove barra final da URL
     const baseUrl = WAHA_URL.replace(/\/$/, '');

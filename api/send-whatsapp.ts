@@ -5,7 +5,7 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL |
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
 const WAHA_URL = process.env.WAHA_URL || 'https://2n8n-waha.oggciy.easypanel.host';
-const WAHA_API_KEY = process.env.WAHA_API_KEY || 'SBrNRu8doChS8amCmy1sI7PmpXyR8eba';
+const WAHA_API_KEY = process.env.WAHA_API_KEY || '';
 
 // Sessão WAHA — 'default' para WAHA Core (gratuito)
 // Quando migrar para o WAHA Plus, trocar para business_id do parâmetro recebido
