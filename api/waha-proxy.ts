@@ -1,5 +1,5 @@
 // api/waha-proxy.ts
-// Proxy para chamadas à API WAHA — protege a API key no servidor
+// Proxy seguro para chamadas ao WAHA — nunca expõe a API Key no cliente
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -9,57 +9,100 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'url e session são obrigatórios' });
     }
 
+    // Remove barra final da URL
+    const baseUrl = url.replace(/\/$/, '');
+
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'X-Api-Key': key || '',
     };
-    if (key) {
-        headers['X-Api-Key'] = key;
-    }
 
     try {
+        // ─── STATUS ────────────────────────────────────────────────
         if (action === 'status') {
-            // GET /api/sessions/{session}
-            const resp = await fetch(`${url}/api/sessions/${session}`, { headers });
+            const resp = await fetch(`${baseUrl}/api/sessions/${session}`, { headers });
+            if (!resp.ok) {
+                const text = await resp.text();
+                return res.status(resp.status).json({ error: text, status: 'UNKNOWN' });
+            }
             const data = await resp.json();
             return res.status(200).json(data);
         }
 
+        // ─── QR CODE (busca pelo servidor e retorna como base64) ───
+        if (action === 'qr') {
+            const qrUrl = `${baseUrl}/api/${session}/auth/qr?format=image`;
+            const resp = await fetch(qrUrl, {
+                headers: { 'X-Api-Key': key || '' },
+            });
+
+            if (!resp.ok) {
+                const text = await resp.text();
+                return res.status(resp.status).json({ error: `WAHA retornou ${resp.status}: ${text}` });
+            }
+
+            const contentType = resp.headers.get('content-type') || 'image/png';
+            const buffer = await resp.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const dataUrl = `data:${contentType};base64,${base64}`;
+
+            return res.status(200).json({ qrBase64: dataUrl });
+        }
+
+        // ─── INICIAR SESSÃO ────────────────────────────────────────
         if (action === 'start') {
-            // POST /api/sessions/start
-            const resp = await fetch(`${url}/api/sessions/start`, {
+            const resp = await fetch(`${baseUrl}/api/sessions/start`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ name: session }),
             });
-            const data = await resp.json();
-            return res.status(200).json(data);
+            const text = await resp.text();
+            try {
+                return res.status(resp.status).json(JSON.parse(text));
+            } catch {
+                return res.status(resp.status).json({ raw: text });
+            }
         }
 
+        // ─── PARAR / DESCONECTAR ───────────────────────────────────
         if (action === 'stop') {
-            // POST /api/sessions/stop com logout: true
-            const resp = await fetch(`${url}/api/sessions/stop`, {
+            const resp = await fetch(`${baseUrl}/api/sessions/stop`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ name: session, logout: true }),
             });
-            const data = await resp.json();
-            return res.status(200).json(data);
+            const text = await resp.text();
+            try {
+                return res.status(resp.status).json(JSON.parse(text));
+            } catch {
+                return res.status(resp.status).json({ raw: text });
+            }
         }
 
+        // ─── ENVIAR MENSAGEM ───────────────────────────────────────
         if (action === 'send') {
-            // POST /api/sendText — usado pelo backend para enviar mensagem
             const body = req.body;
-            const resp = await fetch(`${url}/api/sendText`, {
+            const resp = await fetch(`${baseUrl}/api/sendText`, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify(body),
+                body: JSON.stringify({
+                    session,
+                    chatId: body.chatId,
+                    text: body.text,
+                }),
             });
-            const data = await resp.json();
-            return res.status(200).json(data);
+            const text = await resp.text();
+            try {
+                return res.status(resp.status).json(JSON.parse(text));
+            } catch {
+                return res.status(resp.status).json({ raw: text });
+            }
         }
 
-        return res.status(400).json({ error: 'action inválida' });
+        return res.status(400).json({ error: `action inválida: ${action}` });
+
     } catch (err: any) {
+        console.error('waha-proxy error:', err);
         return res.status(500).json({ error: err.message || 'Erro ao contatar WAHA' });
     }
 }
