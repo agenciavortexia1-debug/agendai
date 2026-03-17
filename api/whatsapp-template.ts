@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 pos_atendimento: data.msg_pos_atendimento,
             },
             lembrete_horas_antes: data.lembrete_horas_antes,
-            waha_session: business_id || data.id // Retornar apenas a session (ID) para o n8n saber pra qual ID disparar
+            waha_session: 'default' // WAHA Core exige que o n8n chame como 'default'
         });
     } catch (err: any) {
         return res.status(500).json({ error: err.message });

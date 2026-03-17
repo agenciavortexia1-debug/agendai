@@ -143,7 +143,7 @@ export default function WhatsAppConfig({ session }: { session: Session }) {
         if (!businessId) return '';
         const params = new URLSearchParams({
             action,
-            session: businessId, // Usamos o ID do negócio como nome da sessão
+            session: 'default', // Para WAHA Core, a sessão precisa obrigatoriamente ser 'default'
         });
         return `/api/waha-proxy?${params}`;
     }

@@ -86,7 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                             'X-Api-Key': WAHA_API_KEY,
                         },
                         body: JSON.stringify({
-                            session: appointment.business_id, // Usamos o ID do negócio como sessão
+                            session: 'default', // Obrigatório ser 'default' no WAHA Core
                             chatId,
                             text: mensagem,
                         }),
